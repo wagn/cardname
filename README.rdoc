@@ -1,5 +1,5 @@
 
-== namelogic
+== SmartName
 
 Wiki Segmented Name Logic
 

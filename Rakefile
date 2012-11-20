@@ -19,14 +19,14 @@ require 'rake'
 begin
     require 'jeweler'
     Jeweler::Tasks.new do |gem|
-      gem.name = 'namelogic'
+      gem.name = 'smartname'
       gem.version = VERSION
-      gem.license = "MIT"
-      gem.summary = "Wiki Segmented Name Logic"
+      gem.license = "GPL-2"
+      gem.summary = "Wagn names without all the wagn"
       gem.email = "gerryg@inbox.com"
-      gem.homepage = "http://github.com/GerryG/namelogic/"
-      gem.description = "Wiki Segmented Name Logic"
-      gem.authors = ["Gerry Gleason <gerryg@inbox.com>"]
+      gem.homepage = "https://github.com/wagn/smartname"
+      gem.description = "Wagn names without all the wagn"
+      gem.authors = ["Gerry Gleason <gerryg@inbox.com>", "Ethan McCutchen <ethan@wagn.org>"]
       gem.files = FileList[
         '[A-Z]*',
         '*.rb',
@@ -60,7 +60,7 @@ require 'rdoc/task'
 Rake::RDocTask.new do |rdoc|
 
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title = "namelogic #{VERSION}"
+  rdoc.title = "smartname #{VERSION}"
   rdoc.rdoc_files.include('README*')
   rdoc.rdoc_files.include('lib/**/*.rb')
 end

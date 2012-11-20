@@ -4,10 +4,10 @@ require 'active_support/configurable'
 require 'active_support/inflector'
 
 class Object
-  def to_name() NameLogic.new(self) end
+  def to_name() SmartName.new(self) end
 end
 
-class NameLogic < Object
+class SmartName < Object
   require 'htmlentities'
   RUBY19            = RUBY_VERSION =~ /^1\.9/
   WORD_RE           = RUBY19 ? '\p{Word}' : '\w'
@@ -19,19 +19,19 @@ class NameLogic < Object
 
   # Wagny defaults:
   JOINT                    = '+'
-  NameLogic.joint          = JOINT
-  NameLogic.formal_joint   = " <span class=\"wiki-joint\">#{JOINT}</span> "
-  NameLogic.banned_array   = [ '/', '~', '|' ]
-  NameLogic.name_attribute = :cardname
-  NameLogic.var_re         = /\{([^\}]*})\}/
-  NameLogic.uninflect      = :singularize
+  SmartName.joint          = JOINT
+  SmartName.formal_joint   = " <span class=\"wiki-joint\">#{JOINT}</span> "
+  SmartName.banned_array   = [ '/', '~', '|' ]
+  SmartName.name_attribute = :cardname
+  SmartName.var_re         = /\{([^\}]*})\}/
+  SmartName.uninflect      = :singularize
 
   @@name2nameobject = {}
 
   class << self
     def new obj
-      return obj if NameLogic===obj
-      str = Array===obj ? obj*NameLogic.joint : obj.to_s
+      return obj if SmartName===obj
+      str = Array===obj ? obj*SmartName.joint : obj.to_s
       if known_name = @@name2nameobject[str]
         known_name
       else
@@ -47,7 +47,7 @@ class NameLogic < Object
     end
 
     def banned_re
-      %r{#{ (['['] + NameLogic.banned_array << NameLogic.joint )*'\\' + ']' }}
+      %r{#{ (['['] + SmartName.banned_array << SmartName.joint )*'\\' + ']' }}
     end
   end
 
@@ -61,11 +61,11 @@ class NameLogic < Object
   def initialize str
     @s = str.to_s.strip
     @s = @s.encode('UTF-8') if RUBY19
-    @key = if @s.index(NameLogic.joint)
-        @parts = @s.split(/\s*#{Regexp.escape(NameLogic.joint)}\s*/)
-        @parts << '' if @s[-1] == NameLogic.joint
+    @key = if @s.index(SmartName.joint)
+        @parts = @s.split(/\s*#{Regexp.escape(SmartName.joint)}\s*/)
+        @parts << '' if @s[-1] == SmartName.joint
         @simple = false
-        @parts.map { |p| p.to_name.key } * NameLogic.joint
+        @parts.map { |p| p.to_name.key } * SmartName.joint
       else
         @parts = [str]
         @simple = true
@@ -75,7 +75,7 @@ class NameLogic < Object
   end
 
   def valid?()
-    not parts.find { |pt| pt.match NameLogic.banned_re }
+    not parts.find { |pt| pt.match SmartName.banned_re }
   end
   def to_name()    self         end
   def length()     parts.length end
@@ -84,7 +84,7 @@ class NameLogic < Object
   alias empty? blank?
 
   def inspect
-    "<NameLogic key=#{key}[#{self}]>"
+    "<SmartName key=#{key}[#{self}]>"
   end
 
   def == obj
@@ -100,7 +100,7 @@ class NameLogic < Object
   #~~~~~~~~~~~~~~~~~~~ VARIANTS ~~~~~~~~~~~~~~~~~~~
 
   def simple_key
-    decoded.underscore.gsub(/[^#{WORD_RE}\*]+/,'_').split(/_+/).reject(&:empty?).map(&(NameLogic.uninflect))*'_'
+    decoded.underscore.gsub(/[^#{WORD_RE}\*]+/,'_').split(/_+/).reject(&:empty?).map(&(SmartName.uninflect))*'_'
   end
 
   def url_key
@@ -108,7 +108,7 @@ class NameLogic < Object
   end
 
   def safe_key
-    @safe_key ||= key.gsub('*','X').gsub NameLogic.joint, '-'
+    @safe_key ||= key.gsub('*','X').gsub SmartName.joint, '-'
   end
 
   def decoded
@@ -123,7 +123,7 @@ class NameLogic < Object
 
     def post_cgi
       #hmm.  this could resolve to the key of some other card.  move to class method?
-      @post_cgi ||= s.gsub '~plus~', NameLogic.joint
+      @post_cgi ||= s.gsub '~plus~', SmartName.joint
     end
 
     #~~~~~~~~~~~~~~~~~~~ PARTS ~~~~~~~~~~~~~~~~~~~
@@ -131,11 +131,11 @@ class NameLogic < Object
     alias simple? simple
     def junction?()  not simple?                                             end
 
-    def left()       @left  ||= simple? ? nil : parts[0..-2]*NameLogic.joint end
+    def left()       @left  ||= simple? ? nil : parts[0..-2]*SmartName.joint end
     def right()      @right ||= simple? ? nil : parts[-1]                    end
 
-    def left_name()  @left_name  ||= left  && NameLogic.new( left  )         end
-    def right_name() @right_name ||= right && NameLogic.new( right )         end
+    def left_name()  @left_name  ||= left  && SmartName.new( left  )         end
+    def right_name() @right_name ||= right && SmartName.new( right )         end
 
     # Note that all names have a trunk and tag, but only junctions have left and right
 
@@ -163,15 +163,15 @@ class NameLogic < Object
     junction? && begin
       right_key = right_name.key
       !!traitlist.find do |codename|
-        codecard = NameLogic.codes[ codename ] and codecard = NameLogic.lookup[ codecard ] and
-          codecard.send(NameLogic.name_attribute).key == right_key
+        codecard = SmartName.codes[ codename ] and codecard = SmartName.lookup[ codecard ] and
+          codecard.send(SmartName.name_attribute).key == right_key
       end
     end
   end
 
   def trait_name tag_code
-    codecard = NameLogic.codes[ tag_code ] and codecard = NameLogic.lookup[ codecard ] and
-      [ self, codecard.send(NameLogic.name_attribute) ].to_name
+    codecard = SmartName.codes[ tag_code ] and codecard = SmartName.lookup[ codecard ] and
+      [ self, codecard.send(SmartName.name_attribute) ].to_name
   end
 
   def trait tag_code
@@ -195,7 +195,7 @@ class NameLogic < Object
     initial_blank = show_parts[0].nil?
     show_name = show_parts.compact.to_name.s
 
-    initial_blank ? NameLogic.joint + show_name : show_name
+    initial_blank ? SmartName.joint + show_name : show_name
   end
 
 
@@ -204,7 +204,7 @@ class NameLogic < Object
     parts.map do |part|
       new_part = case part
         when /^_user$/i;            (user=Session.user_card) ? user.name : part
-        when /^_main$/i;            NameLogic.params[:main_name]
+        when /^_main$/i;            SmartName.params[:main_name]
         when /^(_self|_whole|_)$/i; context.s
         when /^_left$/i;            context.trunk #note - inconsistent use of left v. trunk
         when /^_right$/i;           context.tag
@@ -223,11 +223,11 @@ class NameLogic < Object
           part
         end.to_s.strip
       new_part.empty? ? context.to_s : new_part
-    end * NameLogic.joint
+    end * SmartName.joint
   end
 
   def to_absolute_name *args
-    NameLogic.new to_absolute(*args)
+    SmartName.new to_absolute(*args)
   end
 
   def nth_left n
@@ -266,7 +266,7 @@ class NameLogic < Object
 
   def self.substitute! str, hash
     hash.keys.each do |var|
-      str.gsub!(NameLogic.var_re) { |x| (v=hash[var.to_sym]).nil? ? x : v }
+      str.gsub!(SmartName.var_re) { |x| (v=hash[var.to_sym]).nil? ? x : v }
     end
     str
   end
