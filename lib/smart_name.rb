@@ -63,7 +63,7 @@ class SmartName < Object
     @s = @s.encode('UTF-8') if RUBY19
     @key = if @s.index(SmartName.joint)
         @parts = @s.split(/\s*#{Regexp.escape(SmartName.joint)}\s*/)
-        @parts << '' if @s[-1] == SmartName.joint
+        @parts << '' if @s.last == SmartName.joint
         @simple = false
         @parts.map { |p| p.to_name.key } * SmartName.joint
       else
@@ -74,10 +74,8 @@ class SmartName < Object
     @@name2nameobject[str] = self
   end
 
-  def valid?()
-    not parts.find { |pt| pt.match SmartName.banned_re }
-  end
   def to_name()    self         end
+  def valid?()     not parts.find { |pt| pt.match SmartName.banned_re } end
   def length()     parts.length end
   def size()       to_s.size    end
   def blank?()     s.blank?     end
@@ -156,8 +154,8 @@ class SmartName < Object
 
     #~~~~~~~~~~~~~~~~~~~ TRAITS / STARS ~~~~~~~~~~~~~~~~~~~
 
-  def star?()         simple?   and '*' == s[0]               end
-  def rstar?()        right     and '*' == right[0]           end
+  def star?()         simple?   and '*' == s[0,1]               end
+  def rstar?()        right     and '*' == right[0,1]           end
 
   def trait_name? *traitlist
     junction? && begin
