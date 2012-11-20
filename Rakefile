@@ -25,8 +25,8 @@ begin
       gem.summary = "Wagn names without all the wagn"
       gem.email = "gerryg@inbox.com"
       gem.homepage = "https://github.com/wagn/smartname"
-      gem.description = "Wagn names without all the wagn"
-      gem.authors = ["Gerry Gleason <gerryg@inbox.com>", "Ethan McCutchen <ethan@wagn.org>"]
+      gem.description = "Naming patterns abstracted from the Wagn platform"
+      gem.authors = ["Gerry Gleason", "Ethan McCutchen"]
       gem.files = FileList[
         '[A-Z]*',
         '*.rb',
