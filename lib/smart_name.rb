@@ -2,15 +2,17 @@
 
 require 'active_support/configurable'
 require 'active_support/inflector'
+require 'htmlentities'
 
 class Object
-  def to_name() SmartName.new(self) end
+  def to_name
+    SmartName.new self
+  end
 end
 
 class SmartName < Object
-  require 'htmlentities'
-  RUBY19            = RUBY_VERSION =~ /^1\.9/
-  WORD_RE           = RUBY19 ? '\p{Word}' : '\w'
+  RUBY19      = RUBY_VERSION =~ /^1\.9/
+  OK4KEY_RE   = RUBY19 ? '\p{Word}\*' : '\w\*'
 
   include ActiveSupport::Configurable
 
@@ -18,13 +20,15 @@ class SmartName < Object
     :var_re, :uninflect, :params, :codes, :lookup
 
   # Wagny defaults:
-  JOINT                    = '+'
-  SmartName.joint          = JOINT
-  SmartName.formal_joint   = " <span class=\"wiki-joint\">#{JOINT}</span> "
+  SmartName.joint          = '+'
+  SmartName.formal_joint   = " <span class=\"wiki-joint\">#{SmartName.joint}</span> " #let's get rid of this
   SmartName.banned_array   = [ '/', '~', '|' ]
   SmartName.name_attribute = :cardname
   SmartName.var_re         = /\{([^\}]*})\}/
   SmartName.uninflect      = :singularize
+
+  JOINT_RE    = Regexp.escape SmartName.joint
+
 
   @@name2nameobject = {}
 
@@ -62,8 +66,8 @@ class SmartName < Object
     @s = str.to_s.strip
     @s = @s.encode('UTF-8') if RUBY19
     @key = if @s.index(SmartName.joint)
-        @parts = @s.split(/\s*#{Regexp.escape(SmartName.joint)}\s*/)
-        @parts << '' if @s.last == SmartName.joint
+        @parts = @s.split(/\s*#{JOINT_RE}\s*/)
+        @parts << '' if @s[-1,1] == SmartName.joint
         @simple = false
         @parts.map { |p| p.to_name.key } * SmartName.joint
       else
@@ -75,11 +79,16 @@ class SmartName < Object
   end
 
   def to_name()    self         end
-  def valid?()     not parts.find { |pt| pt.match SmartName.banned_re } end
   def length()     parts.length end
   def size()       to_s.size    end
   def blank?()     s.blank?     end
   alias empty? blank?
+
+  def valid?
+    not parts.find do |pt|
+      pt.match SmartName.banned_re 
+    end
+  end
 
   def inspect
     "<SmartName key=#{key}[#{self}]>"
@@ -87,9 +96,9 @@ class SmartName < Object
 
   def == obj
     object_key = case
-      when obj.respond_to?(:key)      ; obj.key
+      when obj.respond_to?(:key)     ; obj.key
       when obj.respond_to?(:to_name) ; obj.to_name.key
-      else                               ; obj.to_s
+      else                           ; obj.to_s
       end
     object_key == key
   end
@@ -98,11 +107,11 @@ class SmartName < Object
   #~~~~~~~~~~~~~~~~~~~ VARIANTS ~~~~~~~~~~~~~~~~~~~
 
   def simple_key
-    decoded.underscore.gsub(/[^#{WORD_RE}\*]+/,'_').split(/_+/).reject(&:empty?).map(&(SmartName.uninflect))*'_'
+    decoded.underscore.gsub(/[^#{OK4KEY_RE}]+/,'_').split(/_+/).reject(&:empty?).map(&(SmartName.uninflect))*'_'
   end
 
   def url_key
-    @url_key ||= decoded.gsub(/[^\*#{WORD_RE}\s\+]/,' ').strip.gsub(/[\s\_]+/,'_')
+    @url_key ||= decoded.gsub(/[^#{OK4KEY_RE}#{JOINT_RE}]+/,' ').strip.gsub /[\s\_]+/, '_'
   end
 
   def safe_key
@@ -113,43 +122,43 @@ class SmartName < Object
     @decoded ||= (s.index('&') ?  HTMLEntities.new.decode(s) : s)
   end
 
-    def pre_cgi
-      #why is this necessary?? doesn't real CGI escaping handle this??
-      # hmmm.  is this to prevent absolutizing
-      @pre_cgi ||= parts.join '~plus~'
+  def pre_cgi
+    #why is this necessary?? doesn't real CGI escaping handle this??
+    # hmmm.  is this to prevent absolutizing
+    @pre_cgi ||= parts.join '~plus~'
+  end
+
+  def post_cgi
+    #hmm.  this could resolve to the key of some other card.  move to class method?
+    @post_cgi ||= s.gsub '~plus~', SmartName.joint
+  end
+
+  #~~~~~~~~~~~~~~~~~~~ PARTS ~~~~~~~~~~~~~~~~~~~
+
+  alias simple? simple
+  def junction?()  not simple?                                             end
+
+  def left()       @left  ||= simple? ? nil : parts[0..-2]*SmartName.joint end
+  def right()      @right ||= simple? ? nil : parts[-1]                    end
+
+  def left_name()  @left_name  ||= left  && SmartName.new( left  )         end
+  def right_name() @right_name ||= right && SmartName.new( right )         end
+
+  # Note that all names have a trunk and tag, but only junctions have left and right
+
+  def trunk()      @trunk ||= simple? ? s : left                           end
+  def tag()        @tag   ||= simple? ? s : right                          end
+
+  def trunk_name() @trunk_name ||= simple? ? self : left_name              end
+  def tag_name()   @tag_name   ||= simple? ? self : right_name             end
+
+  def pieces
+    @pieces ||= if simple?
+      [ self ]
+    else
+      trunk_name.pieces + [ tag_name ]
     end
-
-    def post_cgi
-      #hmm.  this could resolve to the key of some other card.  move to class method?
-      @post_cgi ||= s.gsub '~plus~', SmartName.joint
-    end
-
-    #~~~~~~~~~~~~~~~~~~~ PARTS ~~~~~~~~~~~~~~~~~~~
-
-    alias simple? simple
-    def junction?()  not simple?                                             end
-
-    def left()       @left  ||= simple? ? nil : parts[0..-2]*SmartName.joint end
-    def right()      @right ||= simple? ? nil : parts[-1]                    end
-
-    def left_name()  @left_name  ||= left  && SmartName.new( left  )         end
-    def right_name() @right_name ||= right && SmartName.new( right )         end
-
-    # Note that all names have a trunk and tag, but only junctions have left and right
-
-    def trunk()      @trunk ||= simple? ? s : left                           end
-    def tag()        @tag   ||= simple? ? s : right                          end
-
-    def trunk_name() @trunk_name ||= simple? ? self : left_name              end
-    def tag_name()   @tag_name   ||= simple? ? self : right_name             end
-
-    def pieces
-      @pieces ||= if simple?
-        [ self ]
-      else
-        trunk_name.pieces + [ tag_name ]
-      end
-    end
+  end
 
 
     #~~~~~~~~~~~~~~~~~~~ TRAITS / STARS ~~~~~~~~~~~~~~~~~~~
@@ -177,11 +186,9 @@ class SmartName < Object
   end
 
 
-
   #~~~~~~~~~~~~~~~~~~~~ SHOW / ABSOLUTE ~~~~~~~~~~~~~~~~~~~~
 
   def to_show context, args={}
-#      ignore = [ args[:ignore], context.to_name.parts ].flatten.compact.map &:to_name
     ignore = [ args[:ignore] ].flatten.map &:to_name
     fullname = parts.to_name.to_absolute_name context, args
 
@@ -190,10 +197,13 @@ class SmartName < Object
       reject ? nil : part
     end
 
-    initial_blank = show_parts[0].nil?
     show_name = show_parts.compact.to_name.s
-
-    initial_blank ? SmartName.joint + show_name : show_name
+    
+    case
+    when show_parts.compact.empty?;  fullname
+    when show_parts[0].nil?       ;  SmartName.joint + show_name
+    else show_name
+    end
   end
 
 
@@ -262,9 +272,13 @@ class SmartName < Object
     end
   end
 
+  # HACK. This doesn't belong here.
+  # shouldn't it use inclusions???
   def self.substitute! str, hash
     hash.keys.each do |var|
-      str.gsub!(SmartName.var_re) { |x| (v=hash[var.to_sym]).nil? ? x : v }
+      str.gsub! SmartName.var_re do |x| 
+        (v=hash[var.to_sym]).nil? ? x : v
+      end
     end
     str
   end
