@@ -24,7 +24,7 @@ class SmartName < Object
   SmartName.formal_joint   = " <span class=\"wiki-joint\">#{SmartName.joint}</span> " #let's get rid of this
   SmartName.banned_array   = [ '/', '~', '|' ]
   SmartName.name_attribute = :cardname
-  SmartName.var_re         = /\{([^\}]*})\}/
+  SmartName.var_re         = /\{([^\}]*\})\}/
   SmartName.uninflect      = :singularize
 
   JOINT_RE    = Regexp.escape SmartName.joint
@@ -162,6 +162,8 @@ class SmartName < Object
 
 
     #~~~~~~~~~~~~~~~~~~~ TRAITS / STARS ~~~~~~~~~~~~~~~~~~~
+    
+    #all the below seems pretty wagn-specific
 
   def star?()         simple?   and '*' == s[0,1]               end
   def rstar?()        right     and '*' == right[0,1]           end
@@ -170,15 +172,15 @@ class SmartName < Object
     junction? && begin
       right_key = right_name.key
       !!traitlist.find do |codename|
-        codecard = SmartName.codes[ codename ] and codecard = SmartName.lookup[ codecard ] and
-          codecard.send(SmartName.name_attribute).key == right_key
+        card_id = SmartName.codes[ codename ] and card = SmartName.lookup[ card_id ] and
+          card.send(SmartName.name_attribute).key == right_key
       end
     end
   end
 
   def trait_name tag_code
-    codecard = SmartName.codes[ tag_code ] and codecard = SmartName.lookup[ codecard ] and
-      [ self, codecard.send(SmartName.name_attribute) ].to_name
+    card_id = SmartName.codes[ tag_code ] and card = SmartName.lookup[ card_id ] and
+      [ self, card.send(SmartName.name_attribute) ].to_name
   end
 
   def trait tag_code
@@ -277,7 +279,7 @@ class SmartName < Object
   def self.substitute! str, hash
     hash.keys.each do |var|
       str.gsub! SmartName.var_re do |x| 
-        (v=hash[var.to_sym]).nil? ? x : v
+        hash[var.to_sym]
       end
     end
     str
