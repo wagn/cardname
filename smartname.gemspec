@@ -8,9 +8,9 @@ Gem::Specification.new do |s|
   s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Gerry Gleason <gerryg@inbox.com>", "Ethan McCutchen <ethan@wagn.org>"]
+  s.authors = ["Gerry Gleason", "Ethan McCutchen"]
   s.date = "2012-11-20"
-  s.description = "Wagn names without all the wagn"
+  s.description = "Naming patterns abstracted from the Wagn platform"
   s.email = "gerryg@inbox.com"
   s.extra_rdoc_files = [
     "README.rdoc"
