@@ -17,7 +17,7 @@ class SmartName < Object
   include ActiveSupport::Configurable
 
   config_accessor :joint, :formal_joint, :name_attribute, :banned_array,
-    :var_re, :uninflect, :params, :codes, :lookup
+    :var_re, :uninflect, :params, :codes, :lookup, :session
 
   # Wagny defaults:
   SmartName.joint          = '+'
@@ -217,7 +217,7 @@ class SmartName < Object
     context = context.to_name
     parts.map do |part|
       new_part = case part
-        when /^_user$/i;            (user=Session.user_card) ? user.name : part
+        when /^_user$/i;            name_proc = SmartName.session and name_proc.call or part
         when /^_main$/i;            SmartName.params[:main_name]
         when /^(_self|_whole|_)$/i; context.s
         when /^_left$/i;            context.trunk #note - inconsistent use of left v. trunk
