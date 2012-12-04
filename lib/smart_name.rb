@@ -194,11 +194,10 @@ class SmartName < Object
 
   #~~~~~~~~~~~~~~~~~~~~ SHOW / ABSOLUTE ~~~~~~~~~~~~~~~~~~~~
 
-  def to_show context, args={}
-    ignore = [ args[:ignore] ].flatten.map &:to_name
-    fullname = parts.to_name.to_absolute_name context, args
+  def to_show *ignore
+    ignore.map! &:to_name
 
-    show_parts = fullname.parts.map do |part|
+    show_parts = parts.map do |part|
       reject = ( part.empty? or part =~ /^_/ or ignore.member? part.to_name )
       reject ? nil : part
     end
@@ -206,7 +205,7 @@ class SmartName < Object
     show_name = show_parts.compact.to_name.s
     
     case
-    when show_parts.compact.empty?;  fullname
+    when show_parts.compact.empty?;  self
     when show_parts[0].nil?       ;  SmartName.joint + show_name
     else show_name
     end

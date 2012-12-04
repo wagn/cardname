@@ -240,12 +240,14 @@ describe SmartName do
 
   describe "#to_show" do
     it "ignores ignorables" do
-               'you+awe'.to_name.to_show('A', :ignore=>'you'        ).should == '+awe'
-            'me+you+awe'.to_name.to_show('A', :ignore=>'you'        ).should == 'me+awe' #HMMM..... what should this do?
-            'me+you+awe'.to_name.to_show('A', :ignore=>['me','you'] ).should == '+awe'
-                'me+you'.to_name.to_show('A', :ignore=>['me','you'] ).should == 'me+you'
-    '_left+_right+awe'.to_name.to_show('A+B', :ignore=>'A'        ).should == '+B+awe'
-               '?a?+awe'.to_name.to_show('B', :ignore=>'A'          ).should == '+awe'
+         'you+awe'.to_name.to_show('you').should == '+awe'
+      'me+you+awe'.to_name.to_show('you').should == 'me+awe' #HMMM..... what should this do?
+      'me+you+awe'.to_name.to_show('me' ).should == '+you+awe'
+      'me+you+awe'.to_name.to_show('me','you').should == '+awe'
+          'me+you'.to_name.to_show('me','you').should == 'me+you'
+         '?a?+awe'.to_name.to_show('A').should == '+awe'
+            '+awe'.to_name.to_show().should == '+awe'
+            '+awe'.to_name.to_show(nil).should == '+awe'
     end
   end
 
