@@ -43,13 +43,6 @@ class SmartName < Object
       end
     end
 
-    def unescape uri
-      # can't instantiate because key doesn't resolve correctly in unescaped form
-      # issue is peculiar to plus sign (+), which are interpreted as a space.
-      # if we could make that not happen, we could avoid this (and handle spaces in urls)
-      uri.gsub(' ','+').gsub '_',' '
-    end
-
     def banned_re
       %r{#{ (['['] + SmartName.banned_array << SmartName.joint )*'\\' + ']' }}
     end
