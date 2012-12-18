@@ -129,32 +129,39 @@ class SmartName < Object
   #~~~~~~~~~~~~~~~~~~~ PARTS ~~~~~~~~~~~~~~~~~~~
 
   alias simple? simple
-  def junction?()  not simple?                                             end
+  def junction?()   not simple?                                             end
 
-  def left()       @left  ||= simple? ? nil : parts[0..-2]*SmartName.joint end
-  def right()      @right ||= simple? ? nil : parts[-1]                    end
-
-  def left_name()  @left_name  ||= left  && SmartName.new( left  )         end
-  def right_name() @right_name ||= right && SmartName.new( right )         end
-
-  # Note that all names have a trunk and tag, but only junctions have left and right
-
-  def trunk()      @trunk ||= simple? ? s : left                           end
-  def tag()        @tag   ||= simple? ? s : right                          end
-
-  def trunk_name() @trunk_name ||= simple? ? self : left_name              end
-  def tag_name()   @tag_name   ||= simple? ? self : right_name             end
-
-  def part_names() @part_names ||= parts.map &:to_name                     end
-  def pieces()     @pieces     ||= piece_names.map &:s                     end    
-
-  def piece_names
-    @piece_names ||= if simple?
+  def left()        @left  ||= simple? ? nil : parts[0..-2]*SmartName.joint end
+  def right()       @right ||= simple? ? nil : parts[-1]                    end
+                    
+  def left_name()   @left_name   ||= left  && SmartName.new( left  )        end
+  def right_name()  @right_name  ||= right && SmartName.new( right )        end
+                    
+  # Note that all n ames have a trunk and tag, but only junctions have left and right
+                    
+  def trunk()       @trunk ||= simple? ? s : left                           end
+  def tag()         @tag   ||= simple? ? s : right                          end
+                    
+  def trunk_name()  @trunk_name  ||= simple? ? self : left_name             end
+  def tag_name()    @tag_name    ||= simple? ? self : right_name            end
+                                                                            
+  def part_names()  @part_names  ||= parts.map  &:to_name                   end
+  def piece_names() @piece_names ||= pieces.map &:to_name                   end
+                                                                            
+  def pieces
+    @pieces ||= if simple?
       [ self ]
     else
-      trunk_name.piece_names + [ tag_name ]
+      junction_pieces = []
+      parts[1..-1].inject parts[0] do |left, right|
+        piece = [left, right] * SmartName.joint
+        junction_pieces << piece
+        piece
+      end
+      parts + junction_pieces
     end
   end
+
 
 
 

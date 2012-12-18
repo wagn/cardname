@@ -64,6 +64,25 @@ describe SmartName do
   end
 
 
+  describe "parts and pieces" do
+    it "should produce simple strings for parts" do
+      "A+B+C+D".to_name.parts.should == %w{ A B C D }
+    end
+
+    it "should produce simple name objects for part_names" do
+      "A+B+C+D".to_name.part_names.should == %w{ A B C D }.map( &:to_name )
+    end
+    
+    it "should produce compound strings for pieces" do
+      "A+B+C+D".to_name.pieces.should == %w{ A B C D A+B A+B+C A+B+C+D }
+    end
+    
+    it "should produce compound name objects for piece_names" do
+      "A+B+C+D".to_name.piece_names.should == %w{ A B C D A+B A+B+C A+B+C+D }.map( &:to_name )
+    end
+  end
+  
+
 
 
 
