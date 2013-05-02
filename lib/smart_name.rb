@@ -11,17 +11,16 @@ class Object
 end
 
 class SmartName < Object
-  RUBY19      = RUBY_VERSION =~ /^1\.9/
-  OK4KEY_RE   = RUBY19 ? '\p{Word}\*' : '\w\*'
+  RUBYENCODING = RUBY_VERSION =~ /^(2|1\.9)/
+  OK4KEY_RE    = RUBYENCODING ? '\p{Word}\*' : '\w\*'
 
   include ActiveSupport::Configurable
 
-  config_accessor :joint, :formal_joint, :name_attribute, :banned_array,
+  config_accessor :joint, :name_attribute, :banned_array,
     :var_re, :uninflect, :params, :codes, :lookup, :session
 
   # Wagny defaults:
   SmartName.joint          = '+'
-  SmartName.formal_joint   = " <span class=\"wiki-joint\">#{SmartName.joint}</span> " #let's get rid of this
   SmartName.banned_array   = [ '/', '~', '|' ]
   SmartName.name_attribute = :cardname
   SmartName.var_re         = /\{([^\}]*\})\}/
@@ -57,7 +56,7 @@ class SmartName < Object
 
   def initialize str
     @s = str.to_s.strip
-    @s = @s.encode('UTF-8') if RUBY19
+    @s = @s.encode('UTF-8') if RUBYENCODING
     @key = if @s.index(SmartName.joint)
         @parts = @s.split(/\s*#{JOINT_RE}\s*/)
         @parts << '' if @s[-1,1] == SmartName.joint
