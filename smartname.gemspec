@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "smartname"
-  s.version = "0.1.8"
+  s.version = "0.2.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Gerry Gleason", "Ethan McCutchen"]
-  s.date = "2013-05-02"
+  s.date = "2013-06-05"
   s.description = "Naming patterns abstracted from the Wagn platform"
   s.email = "gerryg@inbox.com"
   s.extra_rdoc_files = [
@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
     "README.rdoc",
     "Rakefile",
     "VERSION",
+    "lib/core_ext.rb",
     "lib/smart_name.rb",
     "spec/inflection_helper.rb",
     "spec/lib/smart_name_spec.rb",
