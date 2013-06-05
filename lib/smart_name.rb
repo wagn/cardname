@@ -4,37 +4,30 @@ require 'active_support/configurable'
 require 'active_support/inflector'
 require 'htmlentities'
 
-class Object
-  def to_name
-    SmartName.new self
-  end
-end
-
 class SmartName < Object
-  RUBYENCODING = RUBY_VERSION =~ /^(2|1\.9)/
+  RUBYENCODING = RUBY_VERSION !=~ /^1\.8/
   OK4KEY_RE    = RUBYENCODING ? '\p{Word}\*' : '\w\*'
 
   include ActiveSupport::Configurable
-
-  config_accessor :joint, :name_attribute, :banned_array,
-    :var_re, :uninflect, :params, :codes, :lookup, :session
-
+  
+  config_accessor :joint, :name_attribute, :banned_array, :var_re, :uninflect, :params, :session
+  
   # Wagny defaults:
+  #config_accessor :joint,        :default => '+'
   SmartName.joint          = '+'
   SmartName.banned_array   = [ '/', '~', '|' ]
   SmartName.name_attribute = :cardname
   SmartName.var_re         = /\{([^\}]*\})\}/
   SmartName.uninflect      = :singularize
 
-  JOINT_RE    = Regexp.escape SmartName.joint
-
+  JOINT_RE = Regexp.escape joint
 
   @@name2nameobject = {}
 
   class << self
     def new obj
-      return obj if SmartName===obj
-      str = Array===obj ? obj*SmartName.joint : obj.to_s
+      return obj if self.class===obj
+      str = Array===obj ? obj*joint : obj.to_s
       if known_name = @@name2nameobject[str]
         known_name
       else
@@ -43,7 +36,7 @@ class SmartName < Object
     end
 
     def banned_re
-      %r{#{ (['['] + SmartName.banned_array << SmartName.joint )*'\\' + ']' }}
+      %r{#{ (['['] + banned_array << joint )*'\\' + ']' }}
     end
   end
 
@@ -57,11 +50,11 @@ class SmartName < Object
   def initialize str
     @s = str.to_s.strip
     @s = @s.encode('UTF-8') if RUBYENCODING
-    @key = if @s.index(SmartName.joint)
+    @key = if @s.index(self.class.joint)
         @parts = @s.split(/\s*#{JOINT_RE}\s*/)
-        @parts << '' if @s[-1,1] == SmartName.joint
+        @parts << '' if @s[-1,1] == self.class.joint
         @simple = false
-        @parts.map { |p| p.to_name.key } * SmartName.joint
+        @parts.map { |p| p.to_name.key } * self.class.joint
       else
         @parts = [str]
         @simple = true
@@ -78,12 +71,12 @@ class SmartName < Object
 
   def valid?
     not parts.find do |pt|
-      pt.match SmartName.banned_re 
+      pt.match self.class.banned_re 
     end
   end
 
   def inspect
-    "<SmartName key=#{key}[#{self}]>"
+    "<#{self.class.name} key=#{key}[#{self}]>"
   end
 
   def == obj
@@ -99,7 +92,7 @@ class SmartName < Object
   #~~~~~~~~~~~~~~~~~~~ VARIANTS ~~~~~~~~~~~~~~~~~~~
 
   def simple_key
-    decoded.underscore.gsub(/[^#{OK4KEY_RE}]+/,'_').split(/_+/).reject(&:empty?).map(&(SmartName.uninflect))*'_'
+    decoded.underscore.gsub(/[^#{OK4KEY_RE}]+/,'_').split(/_+/).reject(&:empty?).map(&(self.class.uninflect))*'_'
   end
 
   def url_key
@@ -107,7 +100,7 @@ class SmartName < Object
   end
 
   def safe_key
-    @safe_key ||= key.gsub('*','X').gsub SmartName.joint, '-'
+    @safe_key ||= key.gsub('*','X').gsub self.class.joint, '-'
   end
 
   def decoded
@@ -122,7 +115,7 @@ class SmartName < Object
 
   def post_cgi
     #hmm.  this could resolve to the key of some other card.  move to class method?
-    @post_cgi ||= s.gsub '~plus~', SmartName.joint
+    @post_cgi ||= s.gsub '~plus~', self.class.joint
   end
 
   #~~~~~~~~~~~~~~~~~~~ PARTS ~~~~~~~~~~~~~~~~~~~
@@ -130,11 +123,11 @@ class SmartName < Object
   alias simple? simple
   def junction?()   not simple?                                             end
 
-  def left()        @left  ||= simple? ? nil : parts[0..-2]*SmartName.joint end
+  def left()        @left  ||= simple? ? nil : parts[0..-2]*self.class.joint end
   def right()       @right ||= simple? ? nil : parts[-1]                    end
                     
-  def left_name()   @left_name   ||= left  && SmartName.new( left  )        end
-  def right_name()  @right_name  ||= right && SmartName.new( right )        end
+  def left_name()   @left_name   ||= left  && self.class.new( left  )        end
+  def right_name()  @right_name  ||= right && self.class.new( right )        end
                     
   # Note that all n ames have a trunk and tag, but only junctions have left and right
                     
@@ -153,7 +146,7 @@ class SmartName < Object
     else
       junction_pieces = []
       parts[1..-1].inject parts[0] do |left, right|
-        piece = [left, right] * SmartName.joint
+        piece = [left, right] * self.class.joint
         junction_pieces << piece
         piece
       end
@@ -161,34 +154,6 @@ class SmartName < Object
     end
   end
 
-
-
-
-    #~~~~~~~~~~~~~~~~~~~ TRAITS / STARS ~~~~~~~~~~~~~~~~~~~
-    
-    #all the below seems pretty wagn-specific
-
-  def star?()         simple?   and '*' == s[0,1]               end
-  def rstar?()        right     and '*' == right[0,1]           end
-
-  def trait_name? *traitlist
-    junction? && begin
-      right_key = right_name.key
-      !!traitlist.find do |codename|
-        card_id = SmartName.codes[ codename ] and card = SmartName.lookup[ card_id ] and
-          card.send(SmartName.name_attribute).key == right_key
-      end
-    end
-  end
-
-  def trait_name tag_code
-    card_id = SmartName.codes[ tag_code ] and card = SmartName.lookup[ card_id ] and
-      [ self, card.send(SmartName.name_attribute) ].to_name
-  end
-
-  def trait tag_code
-    trait_name( tag_code ).s
-  end
 
 
   #~~~~~~~~~~~~~~~~~~~~ SHOW / ABSOLUTE ~~~~~~~~~~~~~~~~~~~~
@@ -205,7 +170,7 @@ class SmartName < Object
     
     case
     when show_parts.compact.empty?;  self
-    when show_parts[0].nil?       ;  SmartName.joint + show_name
+    when show_parts[0].nil?       ;  self.class.joint + show_name
     else show_name
     end
   end
@@ -215,8 +180,8 @@ class SmartName < Object
     context = context.to_name
     parts.map do |part|
       new_part = case part
-        when /^_user$/i;            name_proc = SmartName.session and name_proc.call or part
-        when /^_main$/i;            SmartName.params[:main_name]
+        when /^_user$/i;            name_proc = self.class.session and name_proc.call or part
+        when /^_main$/i;            self.class.params[:main_name]
         when /^(_self|_whole|_)$/i; context.s
         when /^_left$/i;            context.trunk #note - inconsistent use of left v. trunk
         when /^_right$/i;           context.tag
@@ -235,11 +200,11 @@ class SmartName < Object
           part
         end.to_s.strip
       new_part.empty? ? context.to_s : new_part
-    end * SmartName.joint
+    end * self.class.joint
   end
 
   def to_absolute_name *args
-    SmartName.new to_absolute(*args)
+    self.class.new to_absolute(*args)
   end
 
   def nth_left n
@@ -280,7 +245,7 @@ class SmartName < Object
   # shouldn't it use inclusions???
   def self.substitute! str, hash
     hash.keys.each do |var|
-      str.gsub! SmartName.var_re do |x| 
+      str.gsub! self.class.var_re do |x| 
         hash[var.to_sym]
       end
     end

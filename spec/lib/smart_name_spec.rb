@@ -1,5 +1,7 @@
 # encoding: utf-8
 require File.expand_path('../spec_helper', File.dirname(__FILE__))
+require 'core_ext'
+
 
 describe SmartName do
 
@@ -151,41 +153,6 @@ describe SmartName do
     end
   end
 
-  describe "Cardnames star handling" do
-    it "recognizes star cards" do
-      '*a'.to_name.star?.should be_true
-    end
-
-    it "doesn't recognize star cards with plusses" do
-      '*a+*b'.to_name.star?.should be_false
-    end
-
-    it "recognizes rstar cards" do
-      'a+*a'.to_name.rstar?.should be_true
-    end
-
-    it "doesn't recognize star cards as rstar" do
-      '*a'.to_name.rstar?.should be_false
-    end
-
-    it "doesn't recognize non-star or star left" do
-      '*a+a'.to_name.rstar?.should be_false
-    end
-  end
-
-  describe "trait_name?" do
-    it "returns true for content codename" do
-      "bazoinga+*right+*content".to_name.trait_name?(:content).should be_true
-    end
-
-    it "handles arrays" do
-      "bazoinga+*right+*content".to_name.trait_name?(:content, :default).should be_true
-    end
-
-    it "returns false for non-template" do
-      "bazoinga+*right+nontent".to_name.trait_name?(:content).should be_false
-    end
-  end
 
   describe "#to_absolute" do
     it "handles _self, _whole, _" do
