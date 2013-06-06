@@ -245,7 +245,7 @@ class SmartName < Object
   # shouldn't it use inclusions???
   def self.substitute! str, hash
     hash.keys.each do |var|
-      str.gsub! self.class.var_re do |x| 
+      str.gsub! var_re do |x| 
         hash[var.to_sym]
       end
     end
