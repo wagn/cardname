@@ -5,7 +5,7 @@ require 'active_support/inflector'
 require 'htmlentities'
 
 class SmartName < Object
-  RUBYENCODING = RUBY_VERSION !=~ /^1\.8/
+  RUBYENCODING = RUBY_VERSION !~ /^1\.8/
   OK4KEY_RE    = RUBYENCODING ? '\p{Word}\*' : '\w\*'
 
   include ActiveSupport::Configurable
