@@ -233,7 +233,7 @@ class SmartName < Object
         if self.length == oldpart.length
           newpart
         else
-          (newpart.parts+(parts[oldpart.length,].lines.to_a)).to_name
+          ( newpart.parts + parts[ oldpart.length..-1 ] ).to_name
         end
       else
         self
