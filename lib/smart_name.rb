@@ -44,29 +44,29 @@ class SmartName < Object
       %r{#{ (['['] + banned_array << joint )*'\\' + ']' }}
     end
 
-    def special_keys k
-      if date_parts = k.split('_').reject {|d| DAYS.include? d} and date_parts.length == 3
+    def special_keys key
+      if date_parts = key.split('_').reject {|d| DAYS.include? d} and date_parts.length == 3
         y_idx = date_parts.index {|p| p =~ /^\d{4}$/}
         if y_idx == 0 or y_idx == 2
-          date_parts = date_parts[2], date_parts[1], date_parts[0] if y_idx == 0
-          m_idx=nil
-          (0..date_parts.length-1).find do |idx|
-            if month = MONTHS[date_parts[idx].downcase]
-              date_parts[m_idx = idx] = month.to_s
+          if y_idx == 0
+            date_parts = date_parts[2], date_parts[1], date_parts[0]
+          else
+            m_idx=nil
+            (0..date_parts.length-1).find do |idx|
+              if month = MONTHS[date_parts[idx].downcase]
+                date_parts[m_idx = idx] = month.to_s
+              end
             end
-          end
-          unless date_parts.find {|p| p=~/\D/}
             date_parts[0], date_parts[1] = date_parts[1], date_parts[0] if m_idx == 0 || date_parts[1].to_i > 12
-            return "JD#{Date.parse(date_parts*'-').jd}"
           end
+          return "JD#{Date.parse(date_parts*'-').jd}" unless date_parts.find {|p| p=~/\D/}
         end
-      elsif k !~ /\D/
-        return "N#{k.to_i}"
+      elsif key !~ /\D/
+        return "N#{key.to_i}"
       end
-      k
+      key
     rescue ArgumentError => e
-warn "e #{e.backtrace[0..2]*', '}"
-      k
+      key
     end
   end
 

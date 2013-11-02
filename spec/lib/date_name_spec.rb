@@ -14,6 +14,10 @@ describe SmartName do
       "1999-1-31".to_name.key.should == "JD2451210"
     end
 
+    it "should not do Y D M" do
+      "1999-31-1".to_name.key.should == "1999_31_1"
+    end
+
     it "should do M D Y based on range" do
       "1 31 1999".to_name.key.should == "JD2451210"
     end
