@@ -3,10 +3,14 @@
 require 'active_support/configurable'
 require 'active_support/inflector'
 require 'htmlentities'
+require 'date'
 
 class SmartName < Object
   RUBYENCODING = RUBY_VERSION !~ /^1\.8/
   OK4KEY_RE    = RUBYENCODING ? '\p{Word}\*' : '\w\*'
+
+  DAYS = (Date::ABBR_DAYNAMES + Date::DAYNAMES).map(&:downcase).to_set
+  MONTHS = (1..12).inject({}) {|h, idx| h[Date::ABBR_MONTHNAMES[idx].downcase] = h[Date::MONTHNAMES[idx].downcase] = idx; h}
 
   include ActiveSupport::Configurable
   
@@ -19,6 +23,7 @@ class SmartName < Object
   SmartName.name_attribute = :cardname
   SmartName.var_re         = /\{([^\}]*\})\}/
   SmartName.uninflect      = :singularize
+  #SmartName.special_keys   = &(SmartName.special_keys)
 
   JOINT_RE = Regexp.escape joint
 
@@ -37,6 +42,31 @@ class SmartName < Object
 
     def banned_re
       %r{#{ (['['] + banned_array << joint )*'\\' + ']' }}
+    end
+
+    def special_keys k
+      if date_parts = k.split('_').reject {|d| DAYS.include? d} and date_parts.length == 3
+        y_idx = date_parts.index {|p| p =~ /^\d{4}$/}
+        if y_idx == 0 or y_idx == 2
+          date_parts = date_parts[2], date_parts[1], date_parts[0] if y_idx == 0
+          m_idx=nil
+          (0..date_parts.length-1).find do |idx|
+            if month = MONTHS[date_parts[idx].downcase]
+              date_parts[m_idx = idx] = month.to_s
+            end
+          end
+          unless date_parts.find {|p| p=~/\D/}
+            date_parts[0], date_parts[1] = date_parts[1], date_parts[0] if m_idx == 0 || date_parts[1].to_i > 12
+            return "JD#{Date.parse(date_parts*'-').jd}"
+          end
+        end
+      elsif k !~ /\D/
+        return "N#{k.to_i}"
+      end
+      k
+    rescue ArgumentError => e
+warn "e #{e.backtrace[0..2]*', '}"
+      k
     end
   end
 
@@ -58,7 +88,7 @@ class SmartName < Object
       else
         @parts = [str]
         @simple = true
-        str.empty? ? '' : simple_key
+        str.empty? ? '' : self.class.special_keys( simple_key )
       end
     @@name2nameobject[str] = self
   end
