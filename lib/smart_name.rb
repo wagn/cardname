@@ -15,7 +15,7 @@ class SmartName < Object
     hash[Date::ABBR_MONTHNAMES[idx].downcase] = hash[Date::MONTHNAMES[idx].downcase] = idx
   end
 
-  DATE_FORMAT = '%D'
+  DATE_FORMAT = '%F'
   DATETIME_FORMAT = '%c'
 
   include ActiveSupport::Configurable
@@ -56,13 +56,13 @@ class SmartName < Object
       max_idx = key_parts.size - 2
       while (idx < max_idx) do
         if DAYS.include?(key_parts[idx])
-          if match_result = date_time_match(key_parts[idx+1..idx+3], key_parts[idx+4..-1])
+          if match_result = date_time_match(key_parts[idx+1..-1])
             date_time_key, part_count = match_result
             key_parts[idx..idx+4+part_count] = date_time_key
             key = key_parts * '_'
           end
           break
-        elsif match_result = date_time_match(key_parts[idx..idx+2], key_parts[idx+3..-1])
+        elsif match_result = date_time_match(key_parts[idx..-1])
           date_time_key, part_count = match_result
           key_parts[idx..idx+3+part_count] = date_time_key
           key = key_parts * '_'
@@ -79,74 +79,87 @@ class SmartName < Object
       key
     end
 
-    def date_time_match date_parts, time_parts
-      y_idx = date_parts.index {|p| p =~ /^\d{4}$/}
-      if [0, 2].include? y_idx
-        if y_idx == 2
-          date_parts = date_parts[2], date_parts[1], date_parts[0]
-          m_idx=nil
-          (0..date_parts.length-1).find do |idx|
-            if month = MONTHS[date_parts[idx].downcase]
-              date_parts[m_idx = idx] = month.to_s
-            end
-          end
-          date_parts[2], date_parts[1] = date_parts[1], date_parts[2] if m_idx == 0 || date_parts[1].to_i > 12
+    def date_time_match date_time_parts
+      y_idx = date_time_parts.index {|p| p =~ /^\d{4}$/}
+      return if y_idx == 1
+
+      num_time_parts = 0
+      hms = [0, 0, 0]
+      date_parts = if y_idx and y_idx > 2 and
+            t_match = time_match( date_time_parts[2..y_idx-1] ) and t_match and y_idx == t_match[1]+2
+          hms, num_time_parts = t_match
+          date_time_parts[0..1] + [date_time_parts[y_idx]]
+        else
+          date_time_parts[0..2]
         end
 
-        num_time_parts = 0
-        if time_parts.first =~ /^([ap]m)?(\d{1,2})([ap]m)?$/i
-          min = sec = 0
-          h = $2.to_i
-          if $3 # HH[AP]M
-            num_time_parts, hour, am_pm = 1, h, $3 unless $1 || h > 12
-          elsif $1 && h <= 12 || h <= 23 # [[AP]M]HH[:MM:SS]
-            hour, am_pm = h, $1
+      if y_idx && (y_idx == 2 || y_idx > 2)
+        date_parts = date_parts[2], date_parts[1], date_parts[0]
+        m_idx=nil
+        [1, 2].find do |idx|
+          if month = MONTHS[date_parts[idx].downcase]
+            date_parts[m_idx = idx] = month.to_s
           end
-          if hour
-            if num_time_parts == 0
-              if time_parts[1]
-                if time_parts[1] =~ /^(\d{1,2})([ap]m)?$/i && $1.to_i < 60
-                  if $2 # HH:MM[AP]M
-                    num_time_parts, min, am_pm = 2, $1.to_i, $2 unless am_pm
-                  else # [[AP]M]HH:MM[:SS]
-                    min = $1.to_i
-                  end
-                  if time_parts[2]
-                    if time_parts[2] =~ /^(\d{1,2})([ap]m)?$/i && $1.to_i < 60
-                      am_pm_new, s = $2, $1.to_i
-                      if !am_pm_new && time_parts[3] && time_parts[3] =~ /^[ap]m$/i
-                        num_time_parts, sec, am_pm = 4, s, time_parts[3]
-                      elsif !(am_pm_new && am_pm)
-                        num_time_parts, sec, am_pm = 3, $1.to_i, am_pm_new
-                      end
-                    elsif !am_pm && time_parts[2] =~ /^[ap]m$/i
-                      num_time_parts, ap_pm = 3, time_parts[2]
-                    end
-                  end
-                elsif !am_pm && time_parts[1] =~ /^[ap]m$/i
-                  num_time_parts, ap_pm = 2, time_parts[1]
-                end
-              end
-            end
-            if am_pm
-              hour = 0 if hour == 12
-              hour += 12 if ['p', 'P'].include? am_pm[0]
-            end
-          end
-          hms = [hour, min, sec]
         end
-        unless date_parts.any? {|p| p=~/\D/}
-          hms ||= [0, 0, 0]
-          time = Time.new(*(date_parts.map(&:to_i)), *hms, '+00:00')
-          if num_time_parts > 0
-            ["T#{Sort64.encode64 time.to_i}", num_time_parts]
-          else
-            ["D#{Sort64.encode32 time.to_date.jd}", 0]
-          end
+        date_parts[2], date_parts[1] = date_parts[1], date_parts[2] if m_idx == 2 || date_parts[2].to_i <= 12
+      end
+      hms, num_time_parts = t_match if num_time_parts == 0 && t_match = time_match(date_time_parts[3..-1])
+
+      unless date_parts.any? {|p| p=~/\D/}
+        time = Time.new(*(date_parts.map(&:to_i)), *hms, '+00:00')
+        if num_time_parts > 0
+          ["T#{Sort64.encode64 time.to_i}", num_time_parts]
+        else
+          ["D#{Sort64.encode32 time.to_date.jd}", 0]
         end
       end
     rescue ArgumentError => e
       nil
+    end
+
+    def time_match time_parts
+      num_time_parts = 0
+      if time_parts.first =~ /^([ap]m)?(\d{1,2})([ap]m)?$/i
+        min = sec = 0
+        h = $2.to_i
+        if $3 # HH[AP]M
+          num_time_parts, hour, am_pm = 1, h, $3 unless $1 || h > 12
+        elsif $1 && h <= 12 || h <= 23 # [[AP]M]HH[:MM:SS]
+          hour, am_pm = h, $1
+        end
+        if hour
+          if num_time_parts == 0
+            if time_parts[1]
+              if time_parts[1] =~ /^(\d{1,2})([ap]m)?$/i && $1.to_i < 60
+                if $2 # HH:MM[AP]M
+                  num_time_parts, min, am_pm = 2, $1.to_i, $2 unless am_pm
+                else # [[AP]M]HH:MM[:SS]
+                  min = $1.to_i
+                end
+                if time_parts[2]
+                  if time_parts[2] =~ /^(\d{1,2})([ap]m)?$/i && $1.to_i < 60
+                    am_pm_new, s = $2, $1.to_i
+                    if !am_pm_new && time_parts[3] && time_parts[3] =~ /^[ap]m$/i
+                      num_time_parts, sec, am_pm = 4, s, time_parts[3]
+                    elsif !(am_pm_new && am_pm)
+                      num_time_parts, sec, am_pm = 3, $1.to_i, am_pm_new
+                    end
+                  elsif !am_pm && time_parts[2] =~ /^[ap]m$/i
+                    num_time_parts, ap_pm = 3, time_parts[2]
+                  end
+                end
+              elsif !am_pm && time_parts[1] =~ /^[ap]m$/i
+                num_time_parts, ap_pm = 2, time_parts[1]
+              end
+            end
+          end
+          if am_pm
+            hour = 0 if hour == 12
+            hour += 12 if ['p', 'P'].include? am_pm[0]
+          end
+        end
+        [[hour, min, sec], num_time_parts] if num_time_parts > 0
+      end
     end
   end
 
