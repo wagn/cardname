@@ -220,7 +220,7 @@ class SmartName < Object
   def pretty_key
     parts.map do |part|
       part.to_name.key.split('_').map do |kp|
-        if kp =~ /^[A-Z]/ && num_string = Base64.decode64($')
+        if kp =~ /^[A-Z]/ && num_string = Base64.decode64($'+ '=')
           case $&
             when 'D'
               j = num_string.unpack('L>').first
