@@ -4,7 +4,7 @@ require 'active_support/configurable'
 require 'active_support/inflector'
 require 'htmlentities'
 require 'date'
-require 'base64'
+require 'sort64'
 
 class SmartName < Object
   RUBYENCODING = RUBY_VERSION !~ /^1\.8/
@@ -72,9 +72,9 @@ class SmartName < Object
       end
 
       if key !~ /\D/
-        key = "Q#{Base64.strict_encode64([key.to_i].pack('Q>'))[0..-2]}"
+        key = "Q#{Sort64.encode64 key.to_i}"
       elsif key_parts.size > 1 && key_parts.any?{|kp| kp !~ /\D/}
-        key = key_parts.map{|kp| kp =~ /\D/ ? kp : "L#{Base64.strict_encode64([kp.to_i].pack('L>'))[0..-3]}"}*'_'
+        key = key_parts.map{|kp| kp =~ /\D/ ? kp : "L#{Sort64.encode32 kp.to_i}"}*'_'
       end
       key
     end
@@ -139,9 +139,9 @@ class SmartName < Object
           hms ||= [0, 0, 0]
           time = Time.new(*(date_parts.map(&:to_i)), *hms)
           if num_time_parts > 0
-            ["T#{Base64.strict_encode64([time.to_i].pack('Q>'))[0..-2]}", num_time_parts]
+            ["T#{Sort64.encode64 time.to_i}", num_time_parts]
           else
-            ["D#{Base64.strict_encode64([time.to_date.jd].pack('L>'))[0..-3]}", 0]
+            ["D#{Sort64.encode32 time.to_date.jd}", 0]
           end
         end
       end
@@ -220,20 +220,16 @@ class SmartName < Object
   def pretty_key
     parts.map do |part|
       part.to_name.key.split('_').map do |kp|
-        if kp =~ /^[A-Z]/ && num_string = Base64.decode64($'+ '=')
+        if kp =~ /^[A-Z]/ && value = Sort64.decode($')
           case $&
             when 'D'
-              j = num_string.unpack('L>').first
-              "Date: #{Date.jd(j).strftime(DATE_FORMAT)}"
+              'Date: '      + Date.jd(value).strftime(DATE_FORMAT)
             when 'T'
-              j = num_string.unpack('Q>').first
-              "Datetime: #{Time.at(j).strftime(DATETIME_FORMAT)}"
+              'Datetime: '  + Time.at(value).strftime(DATETIME_FORMAT)
             when 'L'
-              j = num_string.unpack('L>').first
-              "Long: #{j}"
+              'Long: '      + value.to_s
             when 'Q'
-              j = num_string.unpack('Q>').first
-              "Long Long: #{j}"
+              'Long Long: ' + value.to_s
           end
         else
           kp
