@@ -69,19 +69,19 @@ describe SmartName do
     it 'matches after number keys, including time' do
       n='10 20 30, Jan 10, 1999 10am'.to_name
       n.pretty_key.should == 'Long: 10::Long: 20::Long: 30::Datetime: Fri Oct  1 10:00:00 1999'
-      n.key.should == 'L%%%%%8_L%%%%%I_L%%%%%S_T%%%%%%rxAlk'
+      n.key.should == 'L%%%%%8_L%%%%%I_L%%%%%S_T%%%%%%rx6MU'
     end
 
     it 'matches after number keys, including time' do
       n='10 20 30, Jan 10, 1999 10AM'.to_name
       n.pretty_key.should == 'Long: 10::Long: 20::Long: 30::Datetime: Fri Oct  1 10:00:00 1999'
-      n.key.should == 'L%%%%%8_L%%%%%I_L%%%%%S_T%%%%%%rxAlk'
+      n.key.should == 'L%%%%%8_L%%%%%I_L%%%%%S_T%%%%%%rx6MU'
     end
 
     it 'matches include 24 hour time' do
       n='Jan 10, 1999 22:00:00'.to_name
       n.pretty_key.should == 'Datetime: Fri Oct  1 22:00:00 1999'
-      n.key.should == 'T%%%%%%rxLIk'
+      n.key.should == 'T%%%%%%rxGvU'
     end
 
     it 'matches after number keys' do

@@ -137,7 +137,7 @@ class SmartName < Object
         end
         unless date_parts.any? {|p| p=~/\D/}
           hms ||= [0, 0, 0]
-          time = Time.new(*(date_parts.map(&:to_i)), *hms)
+          time = Time.new(*(date_parts.map(&:to_i)), *hms, '+00:00')
           if num_time_parts > 0
             ["T#{Sort64.encode64 time.to_i}", num_time_parts]
           else
@@ -225,7 +225,7 @@ class SmartName < Object
             when 'D'
               'Date: '      + Date.jd(value).strftime(DATE_FORMAT)
             when 'T'
-              'Datetime: '  + Time.at(value).strftime(DATETIME_FORMAT)
+              'Datetime: '  + Time.at(value).getutc.strftime(DATETIME_FORMAT)
             when 'L'
               'Long: '      + value.to_s
             when 'Q'
