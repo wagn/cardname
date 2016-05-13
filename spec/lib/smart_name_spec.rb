@@ -2,8 +2,16 @@
 require File.expand_path('../spec_helper', File.dirname(__FILE__))
 require 'core_ext'
 
-
 describe SmartName do
+  before :all do
+    SmartName.class_eval do
+      def self.load_namespaces
+        {'root_namespace' => 'RootNamespace',
+         'root_namespace+path_element+sub_namespace' => 'RootNamespace+PathElement+SubNamespace'
+        }
+      end
+    end
+  end
 
   describe "#key" do
     it "should remove spaces" do
@@ -238,4 +246,22 @@ describe SmartName do
     end
   end
 
+  describe "namespaced namse" do
+    let(:root_part) { 'RootNamespace' }
+    let(:plus_a) { root_part + '+A' }
+    let(:subspace) { 'PathElement+SubNamespace' }
+    let(:plus_sub) { "#{root_part}+#{subspace}" }
+    let(:plus_bc)  { plus_sub + '+B+C' }
+
+    it 'works in namespaces' do
+      root_part.to_name.rootspace.should be_true
+      plus_a.to_name.rootspace.should be_false
+      plus_sub.to_name.rootspace.should be_false
+      root_part.to_name.namespaced.should == [root_part]
+      plus_a.to_name.namespaced.should == [root_part, 'A']
+      plus_sub.to_name.namespaced.should == [root_part, subspace]
+      plus_bc.to_name.namespaced.should == [root_part, subspace, 'B+C']
+      plus_bc.to_name.to_s.should == plus_bc
+    end
+  end
 end

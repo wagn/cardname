@@ -5,13 +5,12 @@ require 'active_support/inflector'
 require 'htmlentities'
 
 class SmartName < Object
-  RUBYENCODING = RUBY_VERSION !~ /^1\.8/
-  OK4KEY_RE    = RUBYENCODING ? '\p{Word}\*' : '\w\*'
+  OK4KEY_RE    = '\p{Word}\*'
 
   include ActiveSupport::Configurable
   
   config_accessor :joint, :name_attribute, :banned_array, :var_re, :uninflect, :params, :session
-  
+
   # Wagny defaults:
   #config_accessor :joint,        :default => '+'
   SmartName.joint          = '+'
@@ -23,6 +22,7 @@ class SmartName < Object
   JOINT_RE = Regexp.escape joint
 
   @@name2nameobject = {}
+  @@namespaces = nil
 
   class << self
     def new obj
@@ -35,6 +35,22 @@ class SmartName < Object
       end
     end
 
+    def namespaces
+      @@namespaces ||= load_namespaces
+    end
+
+    def load_namespaces
+      {}
+    end
+
+    def reset_cache
+      @@namespaces = nil
+    end
+
+    def [] key
+      namespaces[key]
+    end
+
     def banned_re
       %r{#{ (['['] + banned_array << joint )*'\\' + ']' }}
     end
@@ -44,20 +60,31 @@ class SmartName < Object
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   #~~~~~~~~~~~~~~~~~~~~~~ INSTANCE ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  attr_reader :simple, :parts, :key, :s
+  attr_reader :namespaced, :simple, :rootspace, :parts, :key, :s
   alias to_s s
 
   def initialize str
     @s = str.to_s.strip
-    @s = @s.encode('UTF-8') if RUBYENCODING
+    @s = @s.encode('UTF-8')
     @key = if @s.index(self.class.joint)
         @parts = @s.split(/\s*#{JOINT_RE}\s*/)
         @parts << '' if @s[-1,1] == self.class.joint
         @simple = false
-        @parts.map { |p| p.to_name.key } * self.class.joint
+        names = @parts.each_with_object([]) do |part, names|
+            partial_key= names.flatten.map{ |p| p.to_name.key } * self.class.joint
+            if names.length == 0 || SmartName[partial_key]
+              names << [part]
+            else
+              names[-1] << part
+            end
+          end
+        @namespaced = names.map{|ns| ns * self.class.joint}
+        @rootspace = namespaced.length < 2
+        parts.map { |p| p.to_name.key } * self.class.joint
       else
-        @parts = [str]
-        @simple = true
+        @namespaced = [s]
+        @parts = [s]
+        @simple = @rootspace = true
         str.empty? ? '' : simple_key
       end
     @@name2nameobject[str] = self
@@ -76,7 +103,7 @@ class SmartName < Object
   end
 
   def inspect
-    "<#{self.class.name} key=#{key}[#{self}]>"
+    "<#{self.class.name} key=#{key},#{" namespaced=[#{namespaced.map(&:name)*'::'}]" unless rootspace}[#{self}]>"
   end
 
   def == obj
@@ -253,3 +280,4 @@ class SmartName < Object
   end
 
 end
+
