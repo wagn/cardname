@@ -10,12 +10,14 @@ class SmartName < Object
 
   include ActiveSupport::Configurable
 
-  config_accessor :joint, :banned_array, :var_re, :uninflect, :params, :session
+  config_accessor :joint, :banned_array, :var_re, :uninflect, :params, :session, :stabelize
 
   SmartName.joint          = '+'
   SmartName.banned_array   = ['/', '~', '|']
   SmartName.var_re         = /\{([^\}]*\})\}/
   SmartName.uninflect      = :singularize
+  SmartName.stabelize      = false       
+  
 
   JOINT_RE = Regexp.escape joint
 
@@ -34,6 +36,20 @@ class SmartName < Object
 
     def banned_re
       %r{#{ (['['] + banned_array << joint) * '\\' + ']' }}
+    end
+    
+    # Sometimes the core rule "the key's key must be itself" (called "stable" below) is violated
+    # eg. it fails with singularize as uninflect method for Matthias -> Matthia -> Matthium
+    # Usually that means the name is a proper noun and not a plural.
+    # You can choose between two solutions:
+    # 1. don't uninflect if the uninflected key is not stable (stabelize = false)
+    #    (probably the best choice because you want Matthias not to be the same  as Matthium)
+    # 2. uninflect until the key is stable (stabelize = true)
+    def stable_uninflect name
+      key_one = name.send(SmartName.uninflect)
+      key_two = key_one.send(SmartName.uninflect)
+      return key_one unless key_one != key_two
+      stabelize ? stable_uninflect(key_two) : name
     end
   end
 
@@ -104,7 +120,8 @@ class SmartName < Object
       .gsub(/[^#{OK4KEY_RE}]+/, '_')
       .split(/_+/)
       .reject(&:empty?)
-      .map(&self.class.uninflect) * '_'
+      .map { |key| SmartName.stable_uninflect(key) }
+      .join('_')
   end
 
   def url_key
@@ -122,6 +139,9 @@ class SmartName < Object
     @decoded ||= s.index('&') ? HTMLEntities.new.decode(s) : s
   end
 
+  def uninflect name
+    self.class.uninflect
+  end
   # ~~~~~~~~~~~~~~~~~~~ PARTS ~~~~~~~~~~~~~~~~~~~
 
   alias simple? simple
