@@ -62,6 +62,26 @@ describe SmartName do
       'Jean-fran&ccedil;ois Noubel'.to_name.key.should == 'jean_françoi_noubel'
     end
   end
+  
+  describe 'unstable keys' do
+    context 'stabilize' do
+      before do
+        SmartName.stabilize = true
+      end
+      it 'should uninflect until key is stable' do
+        "matthias".to_name.key.should == "matthium"
+      end
+    end
+    
+    context 'do not stabilize' do
+      before do
+        SmartName.stabilize = false
+      end
+      it 'should not uninflect unstable names' do
+        "ilias".to_name.key.should == "ilias"
+      end
+    end
+  end
 
   describe 'parts and pieces' do
     it 'should produce simple strings for parts' do

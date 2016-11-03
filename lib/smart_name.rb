@@ -10,13 +10,13 @@ class SmartName < Object
 
   include ActiveSupport::Configurable
 
-  config_accessor :joint, :banned_array, :var_re, :uninflect, :params, :session, :stabelize
+  config_accessor :joint, :banned_array, :var_re, :uninflect, :params, :session, :stabilize
 
   SmartName.joint          = '+'
   SmartName.banned_array   = ['/', '~', '|']
   SmartName.var_re         = /\{([^\}]*\})\}/
   SmartName.uninflect      = :singularize
-  SmartName.stabelize      = false       
+  SmartName.stabilize      = false       
   
 
   JOINT_RE = Regexp.escape joint
@@ -49,7 +49,7 @@ class SmartName < Object
       key_one = name.send(SmartName.uninflect)
       key_two = key_one.send(SmartName.uninflect)
       return key_one unless key_one != key_two
-      stabelize ? stable_uninflect(key_two) : name
+      SmartName.stabilize ? stable_uninflect(key_two) : name
     end
   end
 
