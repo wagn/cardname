@@ -42,9 +42,9 @@ class SmartName < Object
     # eg. it fails with singularize as uninflect method for Matthias -> Matthia -> Matthium
     # Usually that means the name is a proper noun and not a plural.
     # You can choose between two solutions:
-    # 1. don't uninflect if the uninflected key is not stable (stabelize = false)
+    # 1. don't uninflect if the uninflected key is not stable (stabilize = false)
     #    (probably the best choice because you want Matthias not to be the same  as Matthium)
-    # 2. uninflect until the key is stable (stabelize = true)
+    # 2. uninflect until the key is stable (stabilize = true)
     def stable_uninflect name
       key_one = name.send(SmartName.uninflect)
       key_two = key_one.send(SmartName.uninflect)
