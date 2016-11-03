@@ -40,26 +40,26 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<activesupport>.freeze, [">= 0"])
-      s.add_runtime_dependency(%q<htmlentities>.freeze, ["~> 4.3.0"])
-      s.add_development_dependency(%q<rspec>.freeze, ["~> 2.8.0"])
-      s.add_development_dependency(%q<rdoc>.freeze, ["~> 3.12"])
-      s.add_development_dependency(%q<bundler>.freeze, ["~> 1.1"])
-      s.add_development_dependency(%q<jeweler>.freeze, ["~> 1.8.3"])
+      s.add_runtime_dependency(%q<htmlentities>.freeze, [">= 0"])
+      s.add_development_dependency(%q<rspec>.freeze, [">= 0"])
+      s.add_development_dependency(%q<rdoc>.freeze, [">= 0"])
+      s.add_development_dependency(%q<bundler>.freeze, [">= 0"])
+      s.add_development_dependency(%q<jeweler>.freeze, [">= 0"])
     else
       s.add_dependency(%q<activesupport>.freeze, [">= 0"])
-      s.add_dependency(%q<htmlentities>.freeze, ["~> 4.3.0"])
-      s.add_dependency(%q<rspec>.freeze, ["~> 2.8.0"])
-      s.add_dependency(%q<rdoc>.freeze, ["~> 3.12"])
-      s.add_dependency(%q<bundler>.freeze, ["~> 1.1"])
-      s.add_dependency(%q<jeweler>.freeze, ["~> 1.8.3"])
+      s.add_dependency(%q<htmlentities>.freeze, [">= 0"])
+      s.add_dependency(%q<rspec>.freeze, [">= 0"])
+      s.add_dependency(%q<rdoc>.freeze, [">= 0"])
+      s.add_dependency(%q<bundler>.freeze, [">= 0"])
+      s.add_dependency(%q<jeweler>.freeze, [">= 0"])
     end
   else
     s.add_dependency(%q<activesupport>.freeze, [">= 0"])
-    s.add_dependency(%q<htmlentities>.freeze, ["~> 4.3.0"])
-    s.add_dependency(%q<rspec>.freeze, ["~> 2.8.0"])
-    s.add_dependency(%q<rdoc>.freeze, ["~> 3.12"])
-    s.add_dependency(%q<bundler>.freeze, ["~> 1.1"])
-    s.add_dependency(%q<jeweler>.freeze, ["~> 1.8.3"])
+    s.add_dependency(%q<htmlentities>.freeze, [">= 0"])
+    s.add_dependency(%q<rspec>.freeze, [">= 0"])
+    s.add_dependency(%q<rdoc>.freeze, [">= 0"])
+    s.add_dependency(%q<bundler>.freeze, [">= 0"])
+    s.add_dependency(%q<jeweler>.freeze, [">= 0"])
   end
 end
 
