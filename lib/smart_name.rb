@@ -139,9 +139,6 @@ class SmartName < Object
     @decoded ||= s.index('&') ? HTMLEntities.new.decode(s) : s
   end
 
-  def uninflect name
-    self.class.uninflect
-  end
   # ~~~~~~~~~~~~~~~~~~~ PARTS ~~~~~~~~~~~~~~~~~~~
 
   alias simple? simple
