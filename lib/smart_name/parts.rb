@@ -97,7 +97,7 @@ class SmartName
      # otherwise ["A+B", "C"].flatten => ["A", "B", "C"]
      def method_missing method, *args, &block
        if parts.respond_to?(method) && method != :to_ary
-         SmartName.new parts.send(method, *args, &block)
+         self.class.new parts.send(method, *args, &block)
        else
          super
        end

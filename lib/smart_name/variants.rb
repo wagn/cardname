@@ -24,5 +24,9 @@ class SmartName
     def decoded
       @decoded ||= s.index('&') ? HTMLEntities.new.decode(s) : s
     end
+
+    def to_sym
+      s.to_sym
+    end
   end
 end

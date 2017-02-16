@@ -30,6 +30,15 @@ RSpec.describe SmartName::Contextual do
       expect('bug+'.to_name.to_absolute('tracks')).to eq('bug+tracks')
     end
 
+    it "handles leading + in context" do
+      expect("+B".to_name.to_absolute("+A")).to eq("+A+B")
+    end
+
+    it "handles leading + in context for child" do
+      binding.pry
+      expect("+A+B".to_name.to_absolute("+A")).to eq("+A+B")
+    end
+
     it 'handles _(numbers)' do
       expect('_1'.to_name.to_absolute('A+B+C')).to eq('A')
       expect('_1+_2'.to_name.to_absolute('A+B+C')).to eq('A+B')
@@ -82,6 +91,43 @@ RSpec.describe SmartName::Contextual do
       expect('?a?+awe'.to_name.to_show('A')).to eq('+awe')
       expect('+awe'.to_name.to_show()).to eq('+awe')
       expect('+awe'.to_name.to_show(nil)).to eq('+awe')
+    end
+  end
+
+  describe "#child_of?" do
+    [["A+B",   "A",     true],
+     ["A+B",   "B",     true],
+     ["A+B+C", "A+B",   true],
+     ["A+B+C", "C",     true],
+     ["A+B",   "A+B",   false],
+     ["A+B",   "A+B+C", false],
+     ["A",     "A",     false],
+     ["A+B+C",  "A",    false],
+     ["A+C",   "A+B",   false],
+     ["A+B",   "C+B",   false],
+     ["X+A+B", "A+C",   false],
+     ["+A", "B",         true],
+     ["+A", "A",         true],
+     ["+A", "+D",        true],
+     ["+A", "+A",       false]].each do |a, b, res|
+      it "#{a} is a child of #{b}" do
+        expect(a.to_name.child_of?(b)).to be res
+      end
+    end
+  end
+
+  describe "#relative_name" do
+    [["A+B",   "A",   "+B"],
+     ["A+B",   "B",   "A"],
+     ["A",     "A",   "A"],
+     ["A+B",   "A+B", "A+B"],
+     ["A",     "A+B", "A"],
+     ["A+C",   "A+B", "+C"],
+     ["A+B",   "C+B", "A"],
+     ["X+A+B", "A+C", "X+B"]].each do |name, context, res|
+      it "#{name} relative to #{context} is #{res}" do
+        expect(name.to_name.relative_name(context).to_s).to eq res
+      end
     end
   end
 

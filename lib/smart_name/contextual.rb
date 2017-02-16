@@ -1,11 +1,49 @@
 class SmartName
   module Contextual
+    RELATIVE_REGEXP = /\b_(left|right|whole|self|user|main|\d+|L*R?)\b/
+
+    def relative_name context_name
+      to_show(*context_name.to_name.parts).to_name
+    end
+
+    def absolute_name context_name
+      to_absolute_name(context_name)
+    end
+
+    # @return true if name is left or right of context
+    def child_of? context
+      return false unless junction?
+      context_key = context.to_name.key
+      absolute_name(context).parent_keys.include? context_key
+    end
+
+    def parent_keys
+      parent_names.map { |n| n.key }
+    end
+
+    def parent_names
+      return [] unless junction?
+      [left_name, right_name]
+    end
+
     def relative?
-      parts.first.empty?
+      s =~ RELATIVE_REGEXP || starts_with_joint?
+    end
+
+    def simple_relative?
+      relative? && stripped.to_name.starts_with_joint?
     end
 
     def absolute?
       !relative?
+    end
+
+    def stripped
+      s.gsub RELATIVE_REGEXP, ""
+    end
+
+    def starts_with_joint?
+      length >= 2 && parts.first.empty?
     end
 
     def to_show *ignore
@@ -30,8 +68,8 @@ class SmartName
       context = context.to_name
 
       new_parts = replace_contextual_parts context
-      if new_parts.first.empty? &&
-        (context.absolute? || !starts_with?(context))
+
+      if new_parts.first.empty? && !new_parts.to_name.starts_with?(context)
         new_parts[0] = context.to_s
       end
       new_parts.join self.class.joint
@@ -48,7 +86,7 @@ class SmartName
 
     private
 
-    def replace_contextual_parts context_name
+    def replace_contextual_parts context
       parts.map do |part|
         new_part =
           case part
