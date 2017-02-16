@@ -4,84 +4,84 @@ require_relative "../../spec_helper"
 RSpec.describe SmartName::Contextual do
   describe '#to_absolute' do
     it 'handles _self, _whole, _' do
-      '_self'.to_name.to_absolute('foo').should == 'foo'
-      '_whole'.to_name.to_absolute('foo').should == 'foo'
-      '_'.to_name.to_absolute('foo').should == 'foo'
+      expect('_self'.to_name.to_absolute('foo')).to eq('foo')
+      expect('_whole'.to_name.to_absolute('foo')).to eq('foo')
+      expect('_'.to_name.to_absolute('foo')).to eq('foo')
     end
 
     it 'handles _left' do
-      '_left+Z'.to_name.to_absolute('A+B+C').should == 'A+B+Z'
+      expect('_left+Z'.to_name.to_absolute('A+B+C')).to eq('A+B+Z')
     end
 
     it 'handles white space' do
-      '_left + Z'.to_name.to_absolute('A+B+C').should == 'A+B+Z'
+      expect('_left + Z'.to_name.to_absolute('A+B+C')).to eq('A+B+Z')
     end
 
     it 'handles _right' do
-      '_right+bang'.to_name.to_absolute('nutter+butter').should == 'butter+bang'
-      'C+_right'.to_name.to_absolute('B+A').should == 'C+A'
+      expect('_right+bang'.to_name.to_absolute('nutter+butter')).to eq('butter+bang')
+      expect('C+_right'.to_name.to_absolute('B+A')).to eq('C+A')
     end
 
     it 'handles leading +' do
-      '+bug'.to_name.to_absolute('hum').should == 'hum+bug'
+      expect('+bug'.to_name.to_absolute('hum')).to eq('hum+bug')
     end
 
     it 'handles trailing +' do
-      'bug+'.to_name.to_absolute('tracks').should == 'bug+tracks'
+      expect('bug+'.to_name.to_absolute('tracks')).to eq('bug+tracks')
     end
 
     it 'handles _(numbers)' do
-      '_1'.to_name.to_absolute('A+B+C').should == 'A'
-      '_1+_2'.to_name.to_absolute('A+B+C').should == 'A+B'
-      '_2+_3'.to_name.to_absolute('A+B+C').should == 'B+C'
+      expect('_1'.to_name.to_absolute('A+B+C')).to eq('A')
+      expect('_1+_2'.to_name.to_absolute('A+B+C')).to eq('A+B')
+      expect('_2+_3'.to_name.to_absolute('A+B+C')).to eq('B+C')
     end
 
     it 'handles _LLR etc' do
-      '_R'.to_name.to_absolute('A+B+C+D+E').should    == 'E'
-      '_L'.to_name.to_absolute('A+B+C+D+E').should    == 'A+B+C+D'
-      '_LR'.to_name.to_absolute('A+B+C+D+E').should   == 'D'
-      '_LL'.to_name.to_absolute('A+B+C+D+E').should   == 'A+B+C'
-      '_LLR'.to_name.to_absolute('A+B+C+D+E').should  == 'C'
-      '_LLL'.to_name.to_absolute('A+B+C+D+E').should  == 'A+B'
-      '_LLLR'.to_name.to_absolute('A+B+C+D+E').should == 'B'
-      '_LLLL'.to_name.to_absolute('A+B+C+D+E').should == 'A'
+      expect('_R'.to_name.to_absolute('A+B+C+D+E')).to    eq('E')
+      expect('_L'.to_name.to_absolute('A+B+C+D+E')).to    eq('A+B+C+D')
+      expect('_LR'.to_name.to_absolute('A+B+C+D+E')).to   eq('D')
+      expect('_LL'.to_name.to_absolute('A+B+C+D+E')).to   eq('A+B+C')
+      expect('_LLR'.to_name.to_absolute('A+B+C+D+E')).to  eq('C')
+      expect('_LLL'.to_name.to_absolute('A+B+C+D+E')).to  eq('A+B')
+      expect('_LLLR'.to_name.to_absolute('A+B+C+D+E')).to eq('B')
+      expect('_LLLL'.to_name.to_absolute('A+B+C+D+E')).to eq('A')
     end
 
     context 'mismatched requests' do
       it 'returns _self for _left or _right on simple cards' do
-        '_left+Z'.to_name.to_absolute('A').should == 'A+Z'
-        '_right+Z'.to_name.to_absolute('A').should == 'A+Z'
+        expect('_left+Z'.to_name.to_absolute('A')).to eq('A+Z')
+        expect('_right+Z'.to_name.to_absolute('A')).to eq('A+Z')
       end
 
       it 'handles bogus numbers' do
-        '_1'.to_name.to_absolute('A').should == 'A'
-        '_1+_2'.to_name.to_absolute('A').should == 'A+A'
-        '_2+_3'.to_name.to_absolute('A').should == 'A+A'
+        expect('_1'.to_name.to_absolute('A')).to eq('A')
+        expect('_1+_2'.to_name.to_absolute('A')).to eq('A+A')
+        expect('_2+_3'.to_name.to_absolute('A')).to eq('A+A')
       end
 
       it 'handles bogus _llr requests' do
-        '_R'.to_name.to_absolute('A').should == 'A'
-        '_L'.to_name.to_absolute('A').should == 'A'
-        '_LR'.to_name.to_absolute('A').should == 'A'
-        '_LL'.to_name.to_absolute('A').should == 'A'
-        '_LLR'.to_name.to_absolute('A').should == 'A'
-        '_LLL'.to_name.to_absolute('A').should == 'A'
-        '_LLLR'.to_name.to_absolute('A').should == 'A'
-        '_LLLL'.to_name.to_absolute('A').should == 'A'
+        expect('_R'.to_name.to_absolute('A')).to eq('A')
+        expect('_L'.to_name.to_absolute('A')).to eq('A')
+        expect('_LR'.to_name.to_absolute('A')).to eq('A')
+        expect('_LL'.to_name.to_absolute('A')).to eq('A')
+        expect('_LLR'.to_name.to_absolute('A')).to eq('A')
+        expect('_LLL'.to_name.to_absolute('A')).to eq('A')
+        expect('_LLLR'.to_name.to_absolute('A')).to eq('A')
+        expect('_LLLL'.to_name.to_absolute('A')).to eq('A')
       end
     end
   end
 
   describe '#to_show' do
     it 'ignores ignorables' do
-      'you+awe'.to_name.to_show('you').should == '+awe'
-      'me+you+awe'.to_name.to_show('you').should == 'me+awe' #HMMM..... what should this do?
-      'me+you+awe'.to_name.to_show('me' ).should == '+you+awe'
-      'me+you+awe'.to_name.to_show('me','you').should == '+awe'
-      'me+you'.to_name.to_show('me','you').should == 'me+you'
-      '?a?+awe'.to_name.to_show('A').should == '+awe'
-      '+awe'.to_name.to_show().should == '+awe'
-      '+awe'.to_name.to_show(nil).should == '+awe'
+      expect('you+awe'.to_name.to_show('you')).to eq('+awe')
+      expect('me+you+awe'.to_name.to_show('you')).to eq('me+awe') #HMMM..... what should this do?
+      expect('me+you+awe'.to_name.to_show('me' )).to eq('+you+awe')
+      expect('me+you+awe'.to_name.to_show('me','you')).to eq('+awe')
+      expect('me+you'.to_name.to_show('me','you')).to eq('me+you')
+      expect('?a?+awe'.to_name.to_show('A')).to eq('+awe')
+      expect('+awe'.to_name.to_show()).to eq('+awe')
+      expect('+awe'.to_name.to_show(nil)).to eq('+awe')
     end
   end
 
