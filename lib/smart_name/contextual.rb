@@ -18,7 +18,7 @@ class SmartName
     end
 
     def parent_keys
-      parent_names.map { |n| n.key }
+      parent_names.map(&:key)
     end
 
     def parent_names
@@ -62,7 +62,6 @@ class SmartName
       else show_name
       end
     end
-
 
     def to_absolute context, args={}
       context = context.to_name

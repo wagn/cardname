@@ -35,7 +35,7 @@ class SmartName < Object
       return obj if obj.is_a? self.class
       str =
         if obj.is_a?(Array)
-          obj.map { |i| i.to_s } * joint
+          obj.map(&:to_s) * joint
         else
           obj.to_s
         end

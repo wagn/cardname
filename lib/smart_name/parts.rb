@@ -88,9 +88,7 @@ class SmartName
        end
      end
 
-     def to_a
-       parts
-     end
+     alias_method :to_a, :parts
 
      # name parts can be accessed and manipulated like an array
      # but no implicit conversion to array

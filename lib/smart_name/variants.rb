@@ -17,6 +17,9 @@ class SmartName
       end * self.class.joint
     end
 
+    # safe to be used in HTML as id ('*' and '+' are not allowed),
+    # but the key is no longer unique.
+    # For example "A-XB" and "A+*B" have the same safe_key
     def safe_key
       @safe_key ||= key.tr('*', 'X').tr self.class.joint, '-'
     end
