@@ -35,7 +35,6 @@ RSpec.describe SmartName::Contextual do
     end
 
     it "handles leading + in context for child" do
-      binding.pry
       expect("+A+B".to_name.to_absolute("+A")).to eq("+A+B")
     end
 

@@ -22,7 +22,6 @@ RSpec.describe SmartName::Variants do
     end
   end
 
-
   describe '#safe_key' do
     it 'subs pluses & stars' do
       expect('Alpha?+*be-ta'.to_name.safe_key).to eq('alpha-Xbe_tum')

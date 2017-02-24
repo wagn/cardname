@@ -1,6 +1,7 @@
 class SmartName
   module Variants
     def simple_key
+      return "" if @s.empty?
       decoded
         .underscore
         .gsub(/[^#{OK4KEY_RE}]+/, '_')
