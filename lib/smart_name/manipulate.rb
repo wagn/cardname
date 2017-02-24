@@ -8,7 +8,7 @@ class SmartName
       return self if old_name.length > length
       return replace_part(old_name, new_name) if old_name.simple?
       return self unless include? old_name
-      replace_all_subsequences(old_name.parts, new_name.parts).to_name
+      replace_all_subsequences(old_name, new_name).to_name
     end
 
     def replace_part oldpart, newpart
@@ -28,7 +28,7 @@ class SmartName
 
       return replace_part oldpiece, newpiece if oldpiece.simple?
       return self unless self.starts_with?(oldpiece)
-      newpiece + self[oldpiece.length, -1]
+      newpiece + self[oldpiece.length..-1]
     end
 
     private
@@ -36,10 +36,12 @@ class SmartName
     def replace_all_subsequences oldseq, newseq
       res = []
       i = 0
-      while i < length - oldseq.length
-        if oldseq.first == parts[i] && oldseq = parts[i, oldseq.size]
-          res += newseq
-          i += oldseq.size
+      while i <= length - oldseq.length
+        # for performance reasons: check first character first then the rest
+        if oldseq.part_keys.first == part_keys[i] &&
+           oldseq.part_keys == part_keys[i, oldseq.length]
+          res += newseq.parts
+          i += oldseq.length
         else
           res << parts[i]
           i += 1

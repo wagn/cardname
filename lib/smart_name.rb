@@ -83,7 +83,7 @@ class SmartName < Object
     @s = str.to_s.strip
     @s = @s.encode('UTF-8') if RUBYENCODING
     initialize_parts
-    @key = @simple ? simple_key : @part_keys.join(self.class.joint)
+    @key = @part_keys.join(self.class.joint)
     @@name2nameobject[str] = self
   end
 

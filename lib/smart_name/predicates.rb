@@ -23,7 +23,7 @@ class SmartName
     end
     alias_method :start_with?, :starts_with?
 
-    # @return true if name starts with the same parts as `prefix`
+    # @return true if name ends with the same parts as `prefix`
     def ends_with? postfix
       end_name = postfix.to_name
       end_name == self[-end_name.length..-1]
