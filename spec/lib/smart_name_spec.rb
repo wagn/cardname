@@ -1,262 +1,129 @@
 # encoding: utf-8
 require File.expand_path('../spec_helper', File.dirname(__FILE__))
-require 'core_ext'
 
 describe SmartName do
   describe '#key' do
     it 'should remove spaces' do
-      'this    Name'.to_name.key.should == 'this_name'
+      expect('this    Name'.to_name.key).to eq('this_name')
     end
 
     it 'should have initial _ for initial cap' do
-      'This Name'.to_name.key.should == 'this_name'
+      expect('This Name'.to_name.key).to eq('this_name')
     end
 
     it 'should have initial _ for initial cap' do
-      '_This Name'.to_name.key.should == 'this_name'
+      expect('_This Name'.to_name.key).to eq('this_name')
     end
 
     it 'should singularize' do
-      'ethans'.to_name.key.should == 'ethan'
+      expect('ethans'.to_name.key).to eq('ethan')
     end
 
     it 'should underscore' do
-      'ThisThing'.to_name.key.should == 'this_thing'
+      expect('ThisThing'.to_name.key).to eq('this_thing')
     end
 
     it 'should handle plus cards' do
-      'ThisThing+Ethans'.to_name.key.should == 'this_thing+ethan'
+      expect('ThisThing+Ethans'.to_name.key).to eq('this_thing+ethan')
     end
 
     it 'should retain * for star cards' do
-      '*right'.to_name.key.should == '*right'
+      expect('*right'.to_name.key).to eq('*right')
     end
 
     it "should not singularize double s's" do
-      'grass'.to_name.key.should == 'grass'
+      expect('grass'.to_name.key).to eq('grass')
     end
 
     it "should not singularize letter 'S'" do
-      'S'.to_name.key.should == 's'
+      expect('S'.to_name.key).to eq('s')
     end
 
     it 'should handle unicode characters' do
-      'Mañana'.to_name.key.should == 'mañana'
+      expect('Mañana'.to_name.key).to eq('mañana')
     end
 
     it 'should handle weird initial characters' do
-      '__you motha @#$'.to_name.key.should == 'you_motha'
-      '?!_you motha @#$'.to_name.key.should == 'you_motha'
+      expect('__you motha @#$'.to_name.key).to eq('you_motha')
+      expect('?!_you motha @#$'.to_name.key).to eq('you_motha')
     end
 
     it 'should allow numbers' do
-      '3way'.to_name.key.should == '3way'
+      expect('3way'.to_name.key).to eq('3way')
     end
 
     it 'internal plurals' do
-      'cards hooks label foos'.to_name.key.should == 'card_hook_label_foo'
+      expect('cards hooks label foos'.to_name.key).to eq('card_hook_label_foo')
     end
 
     it 'should handle html entities' do
       # This no longer takes off the s, is singularize broken now?
-      'Jean-fran&ccedil;ois Noubel'.to_name.key.should == 'jean_françoi_noubel'
+      expect('Jean-fran&ccedil;ois Noubel'.to_name.key).to eq('jean_françoi_noubel')
     end
   end
-  
+
   describe 'unstable keys' do
     context 'stabilize' do
       before do
         SmartName.stabilize = true
       end
       it 'should uninflect until key is stable' do
-        "matthias".to_name.key.should == "matthium"
+        expect("matthias".to_name.key).to eq("matthium")
       end
     end
-    
+
     context 'do not stabilize' do
       before do
         SmartName.stabilize = false
       end
       it 'should not uninflect unstable names' do
-        "ilias".to_name.key.should == "ilias"
+        expect("ilias".to_name.key).to eq("ilias")
       end
-    end
-  end
-
-  describe 'parts and pieces' do
-    it 'should produce simple strings for parts' do
-      'A+B+C+D'.to_name.parts.should == %w( A B C D )
-    end
-
-    it 'should produce simple name objects for part_names' do
-      'A+B+C+D'.to_name.part_names.should == %w( A B C D ).map(&:to_name)
-    end
-
-    it 'should produce compound strings for pieces' do
-      'A+B+C+D'.to_name.pieces.should == %w( A B C D A+B A+B+C A+B+C+D )
-    end
-
-    it 'should produce compound name objects for piece_names' do
-      'A+B+C+D'.to_name.piece_names.should ==
-        %w( A B C D A+B A+B+C A+B+C+D ).map(&:to_name)
-    end
-  end
-
-  describe '#url_key' do
-    cardnames = [
-      'GrassCommons.org',
-      'Oh you @##',
-      "Alice's Restaurant!",
-      'PB &amp; J',
-      'Mañana'
-    ].map(&:to_name)
-
-    cardnames.each do |cardname|
-      it 'should have the same key as the name' do
-        cardname.key.should == cardname.url_key.to_name.key
-      end
-    end
-
-    it 'should handle compound names cleanly' do
-      'What?+the!+heck$'.to_name.url_key.should == 'What+the+heck'
     end
   end
 
   describe '#valid' do
     it 'accepts valid names' do
-      'this+THAT'.to_name.should be_valid
-      'THE*ONE*AND$!ONLY'.to_name.should be_valid
+      expect('this+THAT'.to_name).to be_valid
+      expect('THE*ONE*AND$!ONLY'.to_name).to be_valid
     end
 
     it 'rejects invalide names' do
-      'Tes~sd'.to_name.should_not be_valid
-      'TEST/DDER'.to_name.should_not be_valid
+      expect('Tes~sd'.to_name).not_to be_valid
+      expect('TEST/DDER'.to_name).not_to be_valid
     end
   end
 
-  describe '#left_name' do
-    it 'returns nil for non junction' do
-      'a'.to_name.left_name.should == nil
-    end
-
-    it 'returns parent for parent' do
-      'a+b+c+d'.to_name.left_name.should == 'a+b+c'
-    end
-  end
-
-  describe '#tag_name' do
-    it 'returns last part of plus card' do
-      'a+b+c'.to_name.tag.should == 'c'
-    end
-
-    it 'returns name of simple card' do
-      'a'.to_name.tag.should == 'a'
-    end
-  end
-
-  describe '#safe_key' do
-    it 'subs pluses & stars' do
-      'Alpha?+*be-ta'.to_name.safe_key.should == 'alpha-Xbe_tum'
-    end
-  end
-
-  describe '#replace_part' do
-    it 'replaces first name part' do
-      'a+b'.to_name.replace_part('a', 'x').to_s.should == 'x+b'
-    end
-    it 'replaces second name part' do
-      'a+b'.to_name.replace_part('b', 'x').to_s.should == 'a+x'
-    end
-    it 'replaces two name parts' do
-      'a+b+c'  .to_name.replace_part('a+b', 'x').to_s.should == 'x+c'
-      'a+b+c+d'.to_name.replace_part('a+b', 'e+f').to_s.should == 'e+f+c+d'
-    end
-    it "doesn't replace two part tag" do
-      'a+b+c'.to_name.replace_part('b+c', 'x').to_s.should == 'a+b+c'
-    end
-  end
-
-  describe '#to_absolute' do
-    it 'handles _self, _whole, _' do
-      '_self'.to_name.to_absolute('foo').should == 'foo'
-      '_whole'.to_name.to_absolute('foo').should == 'foo'
-      '_'.to_name.to_absolute('foo').should == 'foo'
-    end
-
-    it 'handles _left' do
-      '_left+Z'.to_name.to_absolute('A+B+C').should == 'A+B+Z'
-    end
-
-    it 'handles white space' do
-      '_left + Z'.to_name.to_absolute('A+B+C').should == 'A+B+Z'
-    end
-
-    it 'handles _right' do
-      '_right+bang'.to_name.to_absolute('nutter+butter').should == 'butter+bang'
-      'C+_right'.to_name.to_absolute('B+A').should == 'C+A'
-    end
-
-    it 'handles leading +' do
-      '+bug'.to_name.to_absolute('hum').should == 'hum+bug'
-    end
-
-    it 'handles trailing +' do
-      'bug+'.to_name.to_absolute('tracks').should == 'bug+tracks'
-    end
-
-    it 'handles _(numbers)' do
-      '_1'.to_name.to_absolute('A+B+C').should == 'A'
-      '_1+_2'.to_name.to_absolute('A+B+C').should == 'A+B'
-      '_2+_3'.to_name.to_absolute('A+B+C').should == 'B+C'
-    end
-
-    it 'handles _LLR etc' do
-      '_R'.to_name.to_absolute('A+B+C+D+E').should    == 'E'
-      '_L'.to_name.to_absolute('A+B+C+D+E').should    == 'A+B+C+D'
-      '_LR'.to_name.to_absolute('A+B+C+D+E').should   == 'D'
-      '_LL'.to_name.to_absolute('A+B+C+D+E').should   == 'A+B+C'
-      '_LLR'.to_name.to_absolute('A+B+C+D+E').should  == 'C'
-      '_LLL'.to_name.to_absolute('A+B+C+D+E').should  == 'A+B'
-      '_LLLR'.to_name.to_absolute('A+B+C+D+E').should == 'B'
-      '_LLLL'.to_name.to_absolute('A+B+C+D+E').should == 'A'
-    end
-
-    context 'mismatched requests' do
-      it 'returns _self for _left or _right on simple cards' do
-        '_left+Z'.to_name.to_absolute('A').should == 'A+Z'
-        '_right+Z'.to_name.to_absolute('A').should == 'A+Z'
+  describe '#include?' do
+    context 'A+B+C' do
+      let(:name) { "A+B+CD+EF".to_name }
+      it '"includes "A"' do
+        expect(name.include? ("A")).to be_truthy
       end
-
-      it 'handles bogus numbers' do
-        '_1'.to_name.to_absolute('A').should == 'A'
-        '_1+_2'.to_name.to_absolute('A').should == 'A+A'
-        '_2+_3'.to_name.to_absolute('A').should == 'A+A'
+      it '"includes "a"' do
+        expect(name.include? ("a")).to be_truthy
       end
-
-      it 'handles bogus _llr requests' do
-           '_R'.to_name.to_absolute('A').should == 'A'
-           '_L'.to_name.to_absolute('A').should == 'A'
-          '_LR'.to_name.to_absolute('A').should == 'A'
-          '_LL'.to_name.to_absolute('A').should == 'A'
-         '_LLR'.to_name.to_absolute('A').should == 'A'
-         '_LLL'.to_name.to_absolute('A').should == 'A'
-        '_LLLR'.to_name.to_absolute('A').should == 'A'
-        '_LLLL'.to_name.to_absolute('A').should == 'A'
+      it '"includes "B"' do
+        expect(name.include? ("B")).to be_truthy
+      end
+      it '"includes "A+B"' do
+        expect(name.include? ("A+B")).to be_truthy
+      end
+      it '"includes "CD+EF"' do
+        expect(name.include? ("CD+EF")).to be_truthy
+      end
+      it '"includes "A+B+CD+EF"' do
+        expect(name.include? ("A+B+CD+EF")).to be_truthy
+      end
+      it '"does not include "A+B+C"' do
+        expect(name.include? ("A+B+C")).to be_falsey
+      end
+      it '"does not include "F"' do
+        expect(name.include? ("F")).to be_falsey
+      end
+      it '"does not include "D+EF"' do
+        expect(name.include? ("AD+EF")).to be_falsey
       end
     end
   end
-
-  describe '#to_show' do
-    it 'ignores ignorables' do
-         'you+awe'.to_name.to_show('you').should == '+awe'
-      'me+you+awe'.to_name.to_show('you').should == 'me+awe' #HMMM..... what should this do?
-      'me+you+awe'.to_name.to_show('me' ).should == '+you+awe'
-      'me+you+awe'.to_name.to_show('me','you').should == '+awe'
-          'me+you'.to_name.to_show('me','you').should == 'me+you'
-         '?a?+awe'.to_name.to_show('A').should == '+awe'
-            '+awe'.to_name.to_show().should == '+awe'
-            '+awe'.to_name.to_show(nil).should == '+awe'
-    end
-  end
-
 end

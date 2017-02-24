@@ -1,5 +1,6 @@
 
 require 'smart_name'
+require 'core_ext'
 require File.expand_path('./inflection_helper', File.dirname(__FILE__))
 
 
