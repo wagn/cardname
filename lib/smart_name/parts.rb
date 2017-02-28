@@ -3,15 +3,16 @@ class SmartName
   # methods that end with _name return name objects
   # the same methods without _name return strings
   module Parts
-    attr_reader :parts, :part_keys
+    attr_reader :parts, :part_keys, :simple
 
+    alias simple? simple
     alias_method :to_a, :parts
     alias_method :to_ary, :parts
 
     def initialize_parts
       # -1 = don't suppress trailing null fields
       @parts = @s.split(/\s*#{JOINT_RE}\s*/, -1)
-      @simple = @parts.one?
+      @simple = @parts.size <= 1
       # simple check needed to avoid inifinite recursion
       @part_keys =
         @simple ? [simple_key] : @parts.map { |p| p.to_name.simple_key }
@@ -85,6 +86,7 @@ class SmartName
     #   "A+B+C+D".to_name.pieces
     #   # => ["A", "B", "C", "D", "A+B", "A+B+C", "A+B+C+D"]
     def pieces
+      binding.pry
       @pieces ||=
         if simple?
           [self]

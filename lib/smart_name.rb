@@ -75,8 +75,7 @@ class SmartName < Object
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ~~~~~~~~~~~~~~~~~~~~~~ INSTANCE ~~~~~~~~~~~~~~~~~~~~~~~~~
-  attr_reader :simple, :key, :s
-  alias simple? simple
+  attr_reader :key, :s
   alias to_s s
 
   def initialize str
