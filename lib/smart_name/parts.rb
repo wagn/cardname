@@ -9,6 +9,14 @@ class SmartName
     alias_method :to_a, :parts
     alias_method :to_ary, :parts
 
+    def to_ary
+      if parts.empty?
+        [""]
+      else
+        parts
+      end
+    end
+
     def initialize_parts
       # -1 = don't suppress trailing null fields
       @parts = @s.split(/\s*#{JOINT_RE}\s*/, -1)

@@ -56,4 +56,10 @@ RSpec.describe SmartName::Parts do
       expect('a'.to_name.tag).to eq('a')
     end
   end
+
+  describe 'array methods' do
+    it 'flatten preserves empty names' do
+      expect(["".to_name, "A"].flatten.to_name.s).to eq "+A"
+    end
+  end
 end

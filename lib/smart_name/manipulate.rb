@@ -28,6 +28,7 @@ class SmartName
 
       return replace_part oldpiece, newpiece if oldpiece.simple?
       return self unless self.starts_with?(oldpiece)
+      return newpiece if oldpiece.length == length
       newpiece + self[oldpiece.length..-1]
     end
 
