@@ -86,7 +86,6 @@ class SmartName
     #   "A+B+C+D".to_name.pieces
     #   # => ["A", "B", "C", "D", "A+B", "A+B+C", "A+B+C+D"]
     def pieces
-      binding.pry
       @pieces ||=
         if simple?
           [self]
