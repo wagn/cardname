@@ -2,6 +2,21 @@
 require_relative "../../spec_helper"
 
 RSpec.describe SmartName::Parts do
+  describe 'simple?' do
+    it 'returns true for empty name' do
+      expect("".to_name.simple?).to eq true
+    end
+    it 'returns true for simple name' do
+      expect("a name".to_name.simple?).to eq true
+    end
+    it 'returns false for junction name' do
+      expect("A+B".to_name.simple?).to eq false
+    end
+    it 'returns false for junction with empty part' do
+      expect("A+".to_name.simple?).to eq false
+    end
+  end
+
   describe 'parts and pieces' do
     it 'produces simple strings for parts' do
       expect('A+B+C+D'.to_name.parts).to eq(%w( A B C D ))
@@ -42,19 +57,9 @@ RSpec.describe SmartName::Parts do
     end
   end
 
-  describe '#replace_part' do
-    it 'replaces first name part' do
-      expect('a+b'.to_name.replace_part('a', 'x').to_s).to eq('x+b')
-    end
-    it 'replaces second name part' do
-      expect('a+b'.to_name.replace_part('b', 'x').to_s).to eq('a+x')
-    end
-    it 'replaces two name parts' do
-      expect('a+b+c'  .to_name.replace_part('a+b', 'x').to_s).to eq('x+c')
-      expect('a+b+c+d'.to_name.replace_part('a+b', 'e+f').to_s).to eq('e+f+c+d')
-    end
-    it "doesn't replace two part tag" do
-      expect('a+b+c'.to_name.replace_part('b+c', 'x').to_s).to eq('a+b+c')
+  describe 'array methods' do
+    it 'flatten preserves empty names' do
+      expect(["".to_name, "A"].flatten.to_name.s).to eq "+A"
     end
   end
 end

@@ -17,15 +17,6 @@ class SmartName
       absolute_name(context).parent_keys.include? context_key
     end
 
-    def parent_keys
-      parent_names.map(&:key)
-    end
-
-    def parent_names
-      return [] unless junction?
-      [left_name, right_name]
-    end
-
     def relative?
       s =~ RELATIVE_REGEXP || starts_with_joint?
     end
@@ -70,6 +61,9 @@ class SmartName
 
       if new_parts.first.empty? && !new_parts.to_name.starts_with?(context)
         new_parts[0] = context.to_s
+      end
+      if new_parts.last.empty? && !new_parts.to_name.ends_with?(context)
+        new_parts[-1] = context.to_s
       end
       new_parts.join self.class.joint
     end

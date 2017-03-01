@@ -1,108 +1,124 @@
 class SmartName
-   module Parts
-     def junction?
-       !simple?
-     end
+  # naming conventions:
+  # methods that end with _name return name objects
+  # the same methods without _name return strings
+  module Parts
+    attr_reader :parts, :part_keys, :simple
 
-     def left
-       @left ||= simple? ? nil : parts[0..-2] * self.class.joint
-     end
+    alias simple? simple
+    alias_method :to_a, :parts
+    alias_method :to_ary, :parts
 
-     def right
-       @right ||= simple? ? nil : parts[-1]
-     end
+    def to_ary
+      if parts.empty?
+        [""]
+      else
+        parts
+      end
+    end
 
-     def left_name
-       @left_name ||= left && self.class.new(left)
-     end
+    def initialize_parts
+      # -1 = don't suppress trailing null fields
+      @parts = @s.split(/\s*#{JOINT_RE}\s*/, -1)
+      @simple = @parts.size <= 1
+      # simple check needed to avoid inifinite recursion
+      @part_keys =
+        @simple ? [simple_key] : @parts.map { |p| p.to_name.simple_key }
+    end
 
-     def right_name
-       @right_name ||= right && self.class.new(right)
-     end
+    def left
+      @left ||= simple? ? nil : parts[0..-2] * self.class.joint
+    end
 
-     # Note that all names have a trunk and tag,
-     # but only junctions have left and right
+    def right
+      @right ||= simple? ? nil : parts[-1]
+    end
 
-     def trunk
-       @trunk ||= simple? ? s : left
-     end
+    def left_name
+      @left_name ||= left && self.class.new(left)
+    end
 
-     def tag
-       @tag ||= simple? ? s : right
-     end
+    def right_name
+      @right_name ||= right && self.class.new(right)
+    end
 
-     def trunk_name
-       @trunk_name ||= simple? ? self : left_name
-     end
+    def left_key
+      @left_key ||=  simple? ? nil : part_keys[0..-2] * self.class.joint
+    end
 
-     def tag_name
-       @tag_name ||= simple? ? self : right_name
-     end
+    def right_key
+      @right_key ||= simple? ? nil : part_keys.last
+    end
 
-     def part_names
-       @part_names ||= parts.map(&:to_name)
-     end
+    def parents
+      @parents ||= junction? ? [left, right] : []
+    end
 
-     def piece_names
-       @piece_names ||= pieces.map(&:to_name)
-     end
+    def parent_names
+      @parent_names ||= junction? ? [left_name, right_name] : []
+    end
 
-     def pieces
-       @pieces ||=
-         if simple?
-           [self]
-         else
-           junction_pieces = []
-           parts[1..-1].inject parts[0] do |left, right|
-             piece = [left, right] * self.class.joint
-             junction_pieces << piece
-             piece
-           end
-           parts + junction_pieces
-         end
-     end
+    def parent_keys
+      @parent_keys ||= junction? ? [left_key, right_key] : []
+    end
 
-     def replace_part oldpart, newpart
-       oldpart = oldpart.to_name
-       newpart = newpart.to_name
-       if oldpart.simple?
-         if simple?
-           self == oldpart ? newpart : self
-         else
-           parts.map do |p|
-             oldpart == p ? newpart.to_s : p
-           end.to_name
-         end
-       elsif simple?
-         self
-       else
-         if oldpart == parts[0, oldpart.length]
-           if length == oldpart.length
-             newpart
-           else
-             (newpart.parts + parts[oldpart.length..-1]).to_name
-           end
-         else
-           self
-         end
-       end
-     end
+    # Note that all names have a trunk and tag,
+    # but only junctions have left and right
 
-     alias_method :to_a, :parts
+    def trunk
+      @trunk ||= simple? ? s : left
+    end
 
-     # name parts can be accessed and manipulated like an array
-     # but no implicit conversion to array
-     # otherwise ["A+B", "C"].flatten => ["A", "B", "C"]
-     def method_missing method, *args, &block
-       if parts.respond_to?(method) && method != :to_ary
-         self.class.new parts.send(method, *args, &block)
-       else
-         super
-       end
-     end
+    def tag
+      @tag ||= simple? ? s : right
+    end
 
-     def respond_to? method, include_private=false
-       super || (method != :to_ary && parts.respond_to?(method, include_private))
-     end
-   end
+    def trunk_name
+      @trunk_name ||= simple? ? self : left_name
+    end
+
+    def tag_name
+      @tag_name ||= simple? ? self : right_name
+    end
+
+    def part_names
+      @part_names ||= parts.map(&:to_name)
+    end
+
+    def piece_names
+      @piece_names ||= pieces.map(&:to_name)
+    end
+
+    # self and all ancestors (= parts and recursive lefts)
+    # @example
+    #   "A+B+C+D".to_name.pieces
+    #   # => ["A", "B", "C", "D", "A+B", "A+B+C", "A+B+C+D"]
+    def pieces
+      @pieces ||=
+        if simple?
+          [self]
+        else
+          junction_pieces = []
+          parts[1..-1].inject parts[0] do |left, right|
+            piece = [left, right] * self.class.joint
+            junction_pieces << piece
+            piece
+          end
+          parts + junction_pieces
+        end
+    end
+
+    # name parts can be accessed and manipulated like an array
+    def method_missing method, *args, &block
+      if parts.respond_to?(method)
+        self.class.new parts.send(method, *args, &block)
+      else
+        super
+      end
+    end
+
+    def respond_to? method, include_private=false
+      super || parts.respond_to?(method, include_private)
+    end
+  end
 end

@@ -6,18 +6,24 @@ require 'htmlentities'
 require_relative 'smart_name/parts'
 require_relative 'smart_name/variants'
 require_relative 'smart_name/contextual'
+require_relative 'smart_name/predicates'
+require_relative 'smart_name/manipulate'
 
 class SmartName < Object
+
   include Parts
   include Variants
   include Contextual
+  include Predicates
+  include Manipulate
 
   RUBYENCODING = RUBY_VERSION !~ /^1\.8/
   OK4KEY_RE    = RUBYENCODING ? '\p{Word}\*' : '\w\*'
 
   include ActiveSupport::Configurable
 
-  config_accessor :joint, :banned_array, :var_re, :uninflect, :params, :session, :stabilize
+  config_accessor :joint, :banned_array, :var_re, :uninflect, :params,
+                  :session, :stabilize
 
   SmartName.joint          = '+'
   SmartName.banned_array   = ['/', '~', '|']
@@ -25,24 +31,26 @@ class SmartName < Object
   SmartName.uninflect      = :singularize
   SmartName.stabilize      = false
 
-
   JOINT_RE = Regexp.escape joint
 
-  @@name2nameobject = {}
+  @@name2nameobject = {} # name cache
 
   class << self
     def new obj
       return obj if obj.is_a? self.class
-      str =
-        if obj.is_a?(Array)
-          obj.map(&:to_s) * joint
-        else
-          obj.to_s
-        end
-      if (known_name = @@name2nameobject[str])
-        known_name
+      str = stringify obj
+      known_name(str) || super(str.strip)
+    end
+
+    def known_name str
+      @@name2nameobject[str]
+    end
+
+    def stringify obj
+      if obj.is_a?(Array)
+        obj.map(&:to_s) * joint
       else
-        super str.strip
+        obj.to_s
       end
     end
 
@@ -67,24 +75,14 @@ class SmartName < Object
 
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   # ~~~~~~~~~~~~~~~~~~~~~~ INSTANCE ~~~~~~~~~~~~~~~~~~~~~~~~~
-
-  attr_reader :simple, :parts, :key, :s
-  alias simple? simple
+  attr_reader :key, :s
   alias to_s s
 
   def initialize str
     @s = str.to_s.strip
     @s = @s.encode('UTF-8') if RUBYENCODING
-    @key = if @s.index(self.class.joint)
-             @parts = @s.split(/\s*#{JOINT_RE}\s*/)
-             @parts << '' if @s[-1, 1] == self.class.joint
-             @simple = false
-             @parts.map { |p| p.to_name.key } * self.class.joint
-           else
-             @parts = [str]
-             @simple = true
-             str.empty? ? '' : simple_key
-           end
+    initialize_parts
+    @key = @part_keys.join(self.class.joint)
     @@name2nameobject[str] = self
   end
 
@@ -100,17 +98,6 @@ class SmartName < Object
     to_s.size
   end
 
-  def blank?
-    s.blank?
-  end
-  alias empty? blank?
-
-  def valid?
-    !parts.find do |pt|
-      pt.match self.class.banned_re
-    end
-  end
-
   def inspect
     "<#{self.class.name} key=#{key}[#{self}]>"
   end
@@ -123,32 +110,5 @@ class SmartName < Object
       else                                  other.to_s
       end
     other_key == key
-  end
-
-  # @return true if name starts with the same parts as `prefix`
-  def starts_with? prefix
-    start_name = prefix.to_name
-    start_name == self[0, start_name.length]
-  end
-  alias_method :start_with?, :starts_with?
-
-  # @return true if name has a chain of parts that equals `subname`
-  def include? subname
-    subkey = subname.to_name.key
-    joint = Regexp.quote self.class.joint
-    key =~ /(^|#{joint})#{Regexp.quote subkey}($|#{joint})/
-  end
-
-  # ~~~~~~~~~~~~~~~~~~~~ MISC ~~~~~~~~~~~~~~~~~~~~
-
-  # HACK. This doesn't belong here.
-  # shouldn't it use inclusions???
-  def self.substitute! str, hash
-    hash.keys.each do |var|
-      str.gsub! var_re do |x|
-        hash[var.to_sym]
-      end
-    end
-    str
   end
 end
