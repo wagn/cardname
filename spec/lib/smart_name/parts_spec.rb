@@ -61,5 +61,9 @@ RSpec.describe SmartName::Parts do
     it 'flatten preserves empty names' do
       expect(["".to_name, "A"].flatten.to_name.s).to eq "+A"
     end
+
+    it 'flatten preserves names' do
+      expect([["A+B".to_name], "C+D".to_name].flatten).to eq ["A+B".to_name, "C+D".to_name]
+    end
   end
 end
