@@ -44,6 +44,10 @@ RSpec.describe SmartName::Contextual do
       expect('_2+_3'.to_name.to_absolute('A+B+C')).to eq('B+C')
     end
 
+    it 'handles empty name' do
+      expect(''.to_name.to_absolute('A+B')).to eq('')
+    end
+
     it 'handles _LLR etc' do
       expect('_R'.to_name.to_absolute('A+B+C+D+E')).to    eq('E')
       expect('_L'.to_name.to_absolute('A+B+C+D+E')).to    eq('A+B+C+D')

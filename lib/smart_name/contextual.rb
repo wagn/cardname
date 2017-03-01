@@ -58,6 +58,7 @@ class SmartName
       context = context.to_name
 
       new_parts = replace_contextual_parts context
+      return "" if new_parts.empty?
 
       if new_parts.first.empty? && !new_parts.to_name.starts_with?(context)
         new_parts[0] = context.to_s
