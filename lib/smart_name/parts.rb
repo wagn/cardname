@@ -7,15 +7,6 @@ class SmartName
 
     alias simple? simple
     alias_method :to_a, :parts
-    alias_method :to_ary, :parts
-
-    def to_ary
-      if parts.empty?
-        [""]
-      else
-        parts
-      end
-    end
 
     def initialize_parts
       # -1 = don't suppress trailing null fields
@@ -108,17 +99,28 @@ class SmartName
         end
     end
 
-    # name parts can be accessed and manipulated like an array
-    def method_missing method, *args, &block
-      if parts.respond_to?(method)
-        self.class.new parts.send(method, *args, &block)
-      else
-        super
-      end
+    def + other
+      self.class.new(parts + other.to_name.parts)
     end
 
-    def respond_to? method, include_private=false
-      super || parts.respond_to?(method, include_private)
+    def [] *args
+      self.class.new parts[*args]
     end
+
+    # full support of array methods caused trouble with `flatten` calls
+    # It splits the parts of smartnames in arrays
+    # # name parts can be accessed and manipulated like an array
+    # def method_missing method, *args, &block
+    #   if ARRAY_METHODS.include? method # parts.respond_to?(method)
+    #     self.class.new parts.send(method, *args, &block)
+    #   else
+    #     super
+    #   end
+    # end
+    #
+    # def respond_to? method, include_private=false
+    #   return true if ARRAY_METHODS.include? method
+    #   super || parts.respond_to?(method, include_private)
+    # end
   end
 end

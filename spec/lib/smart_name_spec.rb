@@ -2,63 +2,77 @@
 require File.expand_path('../spec_helper', File.dirname(__FILE__))
 
 describe SmartName do
-  describe '#key' do
-    it 'should remove spaces' do
-      expect('this    Name'.to_name.key).to eq('this_name')
+  describe "#key" do
+    it "lowercases and underscores" do
+      expect("This Name".to_name.key).to eq("this_name")
     end
 
-    it 'should have initial _ for initial cap' do
-      expect('This Name'.to_name.key).to eq('this_name')
+    it "removes spaces" do
+      expect("this    Name".to_name.key).to eq("this_name")
     end
 
-    it 'should have initial _ for initial cap' do
-      expect('_This Name'.to_name.key).to eq('this_name')
+    describe "underscores" do
+      it "is treated like spaces" do
+        expect("weird_ combo".to_name.key).to eq("weird  combo".to_name.key)
+      end
+
+      it "does not impede pluralization checks" do
+        expect("Mamas_and_Papas".to_name.key).to(
+          eq("Mamas and Papas".to_name.key)
+        )
+      end
+
+      it "is removed when before first word character" do
+        expect("_This Name".to_name.key).to eq("this_name")
+      end
     end
 
-    it 'should singularize' do
-      expect('ethans'.to_name.key).to eq('ethan')
+    it "singularizes" do
+      expect("ethans".to_name.key).to eq("ethan")
     end
 
-    it 'should underscore' do
-      expect('ThisThing'.to_name.key).to eq('this_thing')
+    it "changes CamelCase to snake case" do
+      expect("ThisThing".to_name.key).to eq("this_thing")
     end
 
-    it 'should handle plus cards' do
-      expect('ThisThing+Ethans'.to_name.key).to eq('this_thing+ethan')
+    it "handles plus cards" do
+      expect("ThisThing+Ethans".to_name.key).to eq("this_thing+ethan")
     end
 
-    it 'should retain * for star cards' do
-      expect('*right'.to_name.key).to eq('*right')
+    it "retains * for star cards" do
+      expect("*right".to_name.key).to eq("*right")
     end
 
-    it "should not singularize double s's" do
-      expect('grass'.to_name.key).to eq('grass')
+    it "does not singularize double s's" do
+      expect("grass".to_name.key).to eq("grass")
     end
 
-    it "should not singularize letter 'S'" do
-      expect('S'.to_name.key).to eq('s')
+    it "does not singularize letter 'S'" do
+      expect("S".to_name.key).to eq("s")
     end
 
-    it 'should handle unicode characters' do
-      expect('Mañana'.to_name.key).to eq('mañana')
+    it "handles unicode characters" do
+      expect("Mañana".to_name.key).to eq("mañana")
     end
 
-    it 'should handle weird initial characters' do
-      expect('__you motha @#$'.to_name.key).to eq('you_motha')
-      expect('?!_you motha @#$'.to_name.key).to eq('you_motha')
+    it "handles weird initial characters" do
+      expect("__you motha @\#$".to_name.key).to eq("you_motha")
+      expect("?!_you motha @\#$".to_name.key).to eq("you_motha")
     end
 
-    it 'should allow numbers' do
-      expect('3way'.to_name.key).to eq('3way')
+    it "allows numbers" do
+      expect("3way".to_name.key).to eq("3way")
     end
 
-    it 'internal plurals' do
-      expect('cards hooks label foos'.to_name.key).to eq('card_hook_label_foo')
+    it "internal plurals" do
+      expect("cards hooks label foos".to_name.key).to eq("card_hook_label_foo")
     end
 
-    it 'should handle html entities' do
+    it "handles html entities" do
       # This no longer takes off the s, is singularize broken now?
-      expect('Jean-fran&ccedil;ois Noubel'.to_name.key).to eq('jean_françoi_noubel')
+      expect("Jean-fran&ccedil;ois Noubel".to_name.key).to(
+        eq("jean_françoi_noubel")
+      )
     end
   end
 
